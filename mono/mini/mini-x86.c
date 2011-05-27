@@ -2036,7 +2036,7 @@ emit_float_to_int (MonoCompile *cfg, guchar *code, int dreg, int size, gboolean 
 		 * the stack manipulations */
 		x86_alu_reg_imm (code, X86_SUB, X86_ESP, 8);
 		x86_fst_membase (code, X86_ESP, 0, TRUE, TRUE);
-		x86_movsd_reg_membase (code, XMM_TEMP_REG, X86_ESP, 0);
+		x86_sse_movsd_reg_membase (code, XMM_TEMP_REG, X86_ESP, 0);
 		x86_cvttsd2si (code, dreg, XMM_TEMP_REG);
 		x86_alu_reg_imm (code, X86_ADD, X86_ESP, 8);
 		if (size == 1)
@@ -3384,42 +3384,61 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 		case OP_R8CONST: {
 			double d = *(double *)ins->inst_p0;
 
-			if ((d == 0.0) && (mono_signbit (d) == 0)) {
-				x86_fldz (code);
-			} else if (d == 1.0) {
-				x86_fld1 (code);
-			} else {
-				if (cfg->compile_aot) {
-					guint32 *val = (guint32*)&d;
-					x86_push_imm (code, val [1]);
-					x86_push_imm (code, val [0]);
-					x86_fld_membase (code, X86_ESP, 0, TRUE);
-					x86_alu_reg_imm (code, X86_ADD, X86_ESP, 8);
+			if (cfg->opt & MONO_OPT_SSE2) {
+				if ((d == 0.0) && (mono_signbit (d) == 0)) {
+					x86_sse_xorpd_reg_reg (code, X86_XMM0, X86_XMM0);
+				} else {
+					mono_add_patch_info (cfg, offset, MONO_PATCH_INFO_R8, ins->inst_p0);
+					x86_sse_movsd_reg_membase (code, X86_XMM0, X86_ESP, 0);
 				}
-				else {
-					mono_add_patch_info (cfg, code - cfg->native_code, MONO_PATCH_INFO_R8, ins->inst_p0);
-					x86_fld (code, NULL, TRUE);
+			} else {
+				if ((d == 0.0) && (mono_signbit (d) == 0)) {
+					x86_fldz (code);
+				} else if (d == 1.0) {
+					x86_fld1 (code);
+				} else {
+					if (cfg->compile_aot) {
+						guint32 *val = (guint32*)&d;
+						x86_push_imm (code, val [1]);
+						x86_push_imm (code, val [0]);
+						x86_fld_membase (code, X86_ESP, 0, TRUE);
+						x86_alu_reg_imm (code, X86_ADD, X86_ESP, 8);
+					}
+					else {
+						mono_add_patch_info (cfg, offset, MONO_PATCH_INFO_R8, ins->inst_p0);
+						x86_fld (code, NULL, TRUE);
+					}
 				}
 			}
 			break;
 		}
 		case OP_R4CONST: {
 			float f = *(float *)ins->inst_p0;
-
-			if ((f == 0.0) && (mono_signbit (f) == 0)) {
-				x86_fldz (code);
-			} else if (f == 1.0) {
-				x86_fld1 (code);
-			} else {
-				if (cfg->compile_aot) {
-					guint32 val = *(guint32*)&f;
-					x86_push_imm (code, val);
-					x86_fld_membase (code, X86_ESP, 0, FALSE);
-					x86_alu_reg_imm (code, X86_ADD, X86_ESP, 4);
+			
+			if (cfg->opt & MONO_OPT2_SSE2) {
+				if ((f == 0.0) && (mono_signbit (f) == 0)) {
+					x86_sse_xorpd_reg_reg (code, X86_XMM0, X86_XMM0);
+				} else {
+					mono_add_patch_info (cfg, offset, MONO_PATCH_INFO_R4, ins->inst_p0);
+					x86_movss_reg_membase (code, X86_XMM0, X86_ESP, 0);
+					x86_sse_cvtss2sd_reg_reg (code, X86_XMM0, X86_XMM0);
 				}
-				else {
-					mono_add_patch_info (cfg, code - cfg->native_code, MONO_PATCH_INFO_R4, ins->inst_p0);
-					x86_fld (code, NULL, FALSE);
+			} else {
+				if ((f == 0.0) && (mono_signbit (f) == 0)) {
+					x86_fldz (code);
+				} else if (f == 1.0) {
+					x86_fld1 (code);
+				} else {
+					if (cfg->compile_aot) {
+						guint32 val = *(guint32*)&f;
+						x86_push_imm (code, val);
+						x86_fld_membase (code, X86_ESP, 0, FALSE);
+						x86_alu_reg_imm (code, X86_ADD, X86_ESP, 4);
+					}
+					else {
+						mono_add_patch_info (cfg, code - cfg->native_code, MONO_PATCH_INFO_R4, ins->inst_p0);
+						x86_fld (code, NULL, FALSE);
+					}
 				}
 			}
 			break;
@@ -4628,7 +4647,7 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			if (ins->inst_c0)
 				x86_sse_alu_pd_reg_membase (code, X86_SSE_MOVHPD_REG_MEMBASE, ins->dreg, ins->backend.spill_var->inst_basereg, ins->backend.spill_var->inst_offset);
 			else
-				x86_movsd_reg_membase (code, ins->dreg, ins->backend.spill_var->inst_basereg, ins->backend.spill_var->inst_offset);
+				x86_sse_movsd_reg_membase (code, ins->dreg, ins->backend.spill_var->inst_basereg, ins->backend.spill_var->inst_offset);
 			break;
 
 		case OP_STOREX_MEMBASE_REG:
@@ -4666,7 +4685,7 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 
 		case OP_FCONV_TO_R8_X:
 			x86_fst_membase (code, ins->backend.spill_var->inst_basereg, ins->backend.spill_var->inst_offset, TRUE, TRUE);
-			x86_movsd_reg_membase (code, ins->dreg, ins->backend.spill_var->inst_basereg, ins->backend.spill_var->inst_offset);
+			x86_sse_movsd_reg_membase (code, ins->dreg, ins->backend.spill_var->inst_basereg, ins->backend.spill_var->inst_offset);
 			break;
 
 		case OP_XCONV_R8_TO_I4:
@@ -4711,7 +4730,7 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			break;
 		case OP_EXPAND_R8:
 			x86_fst_membase (code, ins->backend.spill_var->inst_basereg, ins->backend.spill_var->inst_offset, TRUE, TRUE);
-			x86_movsd_reg_membase (code, ins->dreg, ins->backend.spill_var->inst_basereg, ins->backend.spill_var->inst_offset);
+			x86_sse_movsd_reg_membase (code, ins->dreg, ins->backend.spill_var->inst_basereg, ins->backend.spill_var->inst_offset);
 			x86_sse_shift_reg_imm (code, X86_SSE_PSHUFD, ins->dreg, ins->dreg, 0x44);
 			break;
 
