@@ -3386,10 +3386,10 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 
 			if (cfg->opt & MONO_OPT_SSE2) {
 				if ((d == 0.0) && (mono_signbit (d) == 0)) {
-					x86_sse_xorpd_reg_reg (code, X86_XMM0, X86_XMM0);
+					x86_sse_xorpd_reg_reg (code, ins->dreg, ins->dreg);
 				} else {
 					mono_add_patch_info (cfg, offset, MONO_PATCH_INFO_R8, ins->inst_p0);
-					x86_sse_movsd_reg_membase (code, X86_XMM0, X86_ESP, 0);
+					x86_sse_movsd_reg_membase (code, ins->dreg, X86_ESP, 0);
 				}
 			} else {
 				if ((d == 0.0) && (mono_signbit (d) == 0)) {
@@ -3415,13 +3415,13 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 		case OP_R4CONST: {
 			float f = *(float *)ins->inst_p0;
 			
-			if (cfg->opt & MONO_OPT2_SSE2) {
+			if (cfg->opt & MONO_OPT_SSE2) {
 				if ((f == 0.0) && (mono_signbit (f) == 0)) {
-					x86_sse_xorpd_reg_reg (code, X86_XMM0, X86_XMM0);
+					x86_sse_xorpd_reg_reg (code, ins->dreg, ins->dreg);
 				} else {
 					mono_add_patch_info (cfg, offset, MONO_PATCH_INFO_R4, ins->inst_p0);
-					x86_movss_reg_membase (code, X86_XMM0, X86_ESP, 0);
-					x86_sse_cvtss2sd_reg_reg (code, X86_XMM0, X86_XMM0);
+					x86_sse_movss_reg_membase (code, ins->dreg, X86_ESP, 0);
+					x86_sse_cvtss2sd_reg_reg (code, ins->dreg, ins->dreg);
 				}
 			} else {
 				if ((f == 0.0) && (mono_signbit (f) == 0)) {
@@ -3444,16 +3444,35 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			break;
 		}
 		case OP_STORER8_MEMBASE_REG:
-			x86_fst_membase (code, ins->inst_destbasereg, ins->inst_offset, TRUE, TRUE);
+			if (cfg->opt & MONO_OPT_SSE2) {
+				x86_sse_movsd_membase_reg (code, ins->inst_destbasereg, ins->inst_offset, ins->sreg1);
+			} else {
+				x86_fst_membase (code, ins->inst_destbasereg, ins->inst_offset, TRUE, TRUE);
+			}
 			break;
 		case OP_LOADR8_MEMBASE:
-			x86_fld_membase (code, ins->inst_basereg, ins->inst_offset, TRUE);
+			if (cfg->opt & MONO_OPT_SSE2) {
+				x86_sse_movsd_reg_membase (code, ins->dreg, ins->inst_basereg, ins->inst_offset);
+			} else {
+				x86_fld_membase (code, ins->inst_basereg, ins->inst_offset, TRUE);
+			}
 			break;
 		case OP_STORER4_MEMBASE_REG:
-			x86_fst_membase (code, ins->inst_destbasereg, ins->inst_offset, FALSE, TRUE);
+			if (cfg->opt & MONO_OPT_SSE2) {
+				/* This requires a double->single conversion; use XMM7 as scratch space */
+				x86_sse_cvtsd2ss_reg_reg (code, X86_XMM7, ins->sreg1);
+				x86_sse_movss_membase_reg (code, ins->inst_destbasereg, ins->inst_offset, X86_XMM7);
+			} else {
+				x86_fst_membase (code, ins->inst_destbasereg, ins->inst_offset, FALSE, TRUE);
+			}
 			break;
 		case OP_LOADR4_MEMBASE:
-			x86_fld_membase (code, ins->inst_basereg, ins->inst_offset, FALSE);
+			if (cfg->opt & MONO_OPT_SSE2) {
+				x86_sse_movss_reg_membase (code, ins->dreg, ins->inst_basereg, ins->inst_offset);
+				x86_sse_cvtss2sd_reg_reg (code, ins->dreg, ins->dreg);
+			} else {
+				x86_fld_membase (code, ins->inst_basereg, ins->inst_offset, FALSE);
+			}
 			break;
 		case OP_ICONV_TO_R4:
 			x86_push_reg (code, ins->sreg1);
