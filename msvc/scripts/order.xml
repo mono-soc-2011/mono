@@ -522,15 +522,6 @@
       <library_output>./../../class/lib/net_2_0/tmp/System.Design.dll</library_output>
       <response>System.Design.dll.sources</response>
     </project>
-    <project dir="class/PEAPI" library="PEAPI-net_2_0">
-      <boot>false</boot>
-      <mcs>MONO_PATH=./../../class/lib/build: /cvs/mono/runtime/mono-wrapper ./../../class/lib/build/mcs.exe</mcs>
-      <flags>/codepage:65001 -optimize -d:NET_1_1 -d:NET_2_0 -nowarn:1699 -nostdlib -lib:./../../class/lib/net_2_0 -r:mscorlib.dll -debug /noconfig /r:mscorlib.dll /r:System.dll</flags>
-      <output>PEAPI.dll</output>
-      <built_sources></built_sources>
-      <library_output>./../../class/lib/net_2_0/PEAPI.dll</library_output>
-      <response>PEAPI.dll.sources</response>
-    </project>
     <project dir="class/Npgsql" library="Npgsql-net_2_0">
       <boot>false</boot>
       <mcs>MONO_PATH=./../../class/lib/build: /cvs/mono/runtime/mono-wrapper ./../../class/lib/build/mcs.exe</mcs>
@@ -1137,7 +1128,7 @@
     <project dir="ilasm" library="ilasm-net_2_0">
       <boot></boot>
       <mcs>MONO_PATH=./../class/lib/build: /cvs/mono/runtime/mono-wrapper ./../class/lib/build/mcs.exe</mcs>
-      <flags>/codepage:65001 /lib:../class/lib/net_2_0 /r:../class/lib/net_2_0/PEAPI.dll /r:Mono.CompilerServices.SymbolWriter.dll /r:Mono.Security.dll -optimize -d:NET_1_1 -d:NET_2_0 -nowarn:1699 -nostdlib -lib:./../class/lib/net_2_0 -r:mscorlib.dll -debug /noconfig</flags>
+      <flags>/codepage:65001 /lib:../class/lib/net_2_0 /r:Mono.CompilerServices.SymbolWriter.dll /r:Mono.Security.dll -optimize -d:NET_1_1 -d:NET_2_0 -nowarn:1699 -nostdlib -lib:./../class/lib/net_2_0 -r:mscorlib.dll -debug /noconfig</flags>
       <output>./../class/lib/net_2_0/ilasm.exe</output>
       <built_sources></built_sources>
       <library_output></library_output>
@@ -1700,15 +1691,6 @@
       <built_sources></built_sources>
       <library_output>./../../class/lib/net_4_0/tmp/System.Design.dll</library_output>
       <response>System.Design.dll.sources</response>
-    </project>
-    <project dir="class/PEAPI" library="PEAPI-net_4_0">
-      <boot>false</boot>
-      <mcs>MONO_PATH=./../../class/lib/build: /cvs/mono/runtime/mono-wrapper ./../../class/lib/build/mcs.exe</mcs>
-      <flags>/codepage:65001 -optimize -d:NET_1_1 -d:NET_2_0 -d:NET_3_0 -d:NET_3_5 -d:NET_4_0 -nowarn:1699 -nostdlib -lib:./../../class/lib/net_4_0 -r:mscorlib.dll -debug /noconfig /r:mscorlib.dll /r:System.dll</flags>
-      <output>PEAPI.dll</output>
-      <built_sources></built_sources>
-      <library_output>./../../class/lib/net_4_0/PEAPI.dll</library_output>
-      <response>PEAPI.dll.sources</response>
     </project>
     <project dir="class/Npgsql" library="Npgsql-net_4_0">
       <boot>false</boot>
@@ -2415,7 +2397,7 @@
     <project dir="ilasm" library="ilasm-net_4_0">
       <boot></boot>
       <mcs>MONO_PATH=./../class/lib/build: /cvs/mono/runtime/mono-wrapper ./../class/lib/build/mcs.exe</mcs>
-      <flags>/codepage:65001 /lib:../class/lib/net_4_0 /r:../class/lib/net_4_0/PEAPI.dll /r:Mono.CompilerServices.SymbolWriter.dll /r:Mono.Security.dll -optimize -d:NET_1_1 -d:NET_2_0 -d:NET_3_0 -d:NET_3_5 -d:NET_4_0 -nowarn:1699 -nostdlib -lib:./../class/lib/net_4_0 -r:mscorlib.dll -debug /noconfig</flags>
+      <flags>/codepage:65001 /lib:../class/lib/net_4_0 /r:Mono.CompilerServices.SymbolWriter.dll /r:Mono.Security.dll -optimize -d:NET_1_1 -d:NET_2_0 -d:NET_3_0 -d:NET_3_5 -d:NET_4_0 -nowarn:1699 -nostdlib -lib:./../class/lib/net_4_0 -r:mscorlib.dll -debug /noconfig</flags>
       <output>./../class/lib/net_4_0/ilasm.exe</output>
       <built_sources></built_sources>
       <library_output></library_output>
