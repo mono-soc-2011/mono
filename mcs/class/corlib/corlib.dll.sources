@@ -1578,3 +1578,4 @@ System.Threading.Tasks/SynchronizationContextScheduler.cs
 System.Threading.Tasks/UnobservedTaskExceptionEventArgs.cs
 System.Collections.Concurrent/ObjectPool.cs
 System.Threading.Tasks/TpScheduler.cs
+System.Threading.Tasks/ConcurrentExclusiveSchedulerPair.cs
