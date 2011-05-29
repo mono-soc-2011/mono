@@ -50,6 +50,11 @@ namespace System.Threading.Tasks
 			throw new NotImplementedException ();
 		}
 
+		public void Complete ()
+		{
+			throw new NotImplementedException ();
+		}
+
 		public TaskScheduler ConcurrentScheduler {
 			get {
 				throw new NotImplementedException ();
@@ -57,6 +62,12 @@ namespace System.Threading.Tasks
 		}
 
 		public TaskScheduler ExclusiveScheduler {
+			get {
+				throw new NotImplementedException ();
+			}
+		}
+
+		public Task Completion {
 			get {
 				throw new NotImplementedException ();
 			}
