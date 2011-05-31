@@ -3372,26 +3372,25 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 				if ((d == 0.0) && (mono_signbit (d) == 0)) {
 					x86_sse_xorpd_reg_reg (code, ins->dreg, ins->dreg);
 				} else {
-					mono_add_patch_info (cfg, offset, MONO_PATCH_INFO_R8, ins->inst_p0);
-					x86_sse_movsd_reg_membase (code, ins->dreg, X86_ESP, 0);
+					x86_sse_movsd_reg_mem (code, ins->dreg, ins->inst_p0);
 				}
+				break;
+			}
+			if ((d == 0.0) && (mono_signbit (d) == 0)) {
+				x86_fldz (code);
+			} else if (d == 1.0) {
+				x86_fld1 (code);
 			} else {
-				if ((d == 0.0) && (mono_signbit (d) == 0)) {
-					x86_fldz (code);
-				} else if (d == 1.0) {
-					x86_fld1 (code);
-				} else {
-					if (cfg->compile_aot) {
-						guint32 *val = (guint32*)&d;
-						x86_push_imm (code, val [1]);
-						x86_push_imm (code, val [0]);
-						x86_fld_membase (code, X86_ESP, 0, TRUE);
-						x86_alu_reg_imm (code, X86_ADD, X86_ESP, 8);
-					}
-					else {
-						mono_add_patch_info (cfg, offset, MONO_PATCH_INFO_R8, ins->inst_p0);
-						x86_fld (code, NULL, TRUE);
-					}
+				if (cfg->compile_aot) {
+					guint32 *val = (guint32*)&d;
+					x86_push_imm (code, val [1]);
+					x86_push_imm (code, val [0]);
+					x86_fld_membase (code, X86_ESP, 0, TRUE);
+					x86_alu_reg_imm (code, X86_ADD, X86_ESP, 8);
+				}
+				else {
+					mono_add_patch_info (cfg, offset, MONO_PATCH_INFO_R8, ins->inst_p0);
+					x86_fld (code, NULL, TRUE);
 				}
 			}
 			break;
@@ -3403,26 +3402,25 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 				if ((f == 0.0) && (mono_signbit (f) == 0)) {
 					x86_sse_xorpd_reg_reg (code, ins->dreg, ins->dreg);
 				} else {
-					mono_add_patch_info (cfg, offset, MONO_PATCH_INFO_R4, ins->inst_p0);
-					x86_sse_movss_reg_membase (code, ins->dreg, X86_ESP, 0);
+					x86_sse_movss_reg_mem (code, ins->dreg, ins->inst_p0);
 					x86_sse_cvtss2sd_reg_reg (code, ins->dreg, ins->dreg);
 				}
+				break;
+			}
+			if ((f == 0.0) && (mono_signbit (f) == 0)) {
+				x86_fldz (code);
+			} else if (f == 1.0) {
+				x86_fld1 (code);
 			} else {
-				if ((f == 0.0) && (mono_signbit (f) == 0)) {
-					x86_fldz (code);
-				} else if (f == 1.0) {
-					x86_fld1 (code);
-				} else {
-					if (cfg->compile_aot) {
-						guint32 val = *(guint32*)&f;
-						x86_push_imm (code, val);
-						x86_fld_membase (code, X86_ESP, 0, FALSE);
-						x86_alu_reg_imm (code, X86_ADD, X86_ESP, 4);
-					}
-					else {
-						mono_add_patch_info (cfg, code - cfg->native_code, MONO_PATCH_INFO_R4, ins->inst_p0);
-						x86_fld (code, NULL, FALSE);
-					}
+				if (cfg->compile_aot) {
+					guint32 val = *(guint32*)&f;
+					x86_push_imm (code, val);
+					x86_fld_membase (code, X86_ESP, 0, FALSE);
+					x86_alu_reg_imm (code, X86_ADD, X86_ESP, 4);
+				}
+				else {
+					mono_add_patch_info (cfg, code - cfg->native_code, MONO_PATCH_INFO_R4, ins->inst_p0);
+					x86_fld (code, NULL, FALSE);
 				}
 			}
 			break;

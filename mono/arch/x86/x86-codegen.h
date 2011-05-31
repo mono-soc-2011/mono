@@ -2403,6 +2403,15 @@ typedef enum {
 		x86_reg_emit ((inst), (dreg), (reg));	\
 	} while (0)
 	
+#define emit_sse_reg_mem(inst,dreg,mem,op1,op2,op3) \
+	do {	\
+		x86_codegen_pre(&(inst), 4); \
+		*(inst)++ = (unsigned char)(op1);	\
+		*(inst)++ = (unsigned char)(op2);       \
+		*(inst)++ = (unsigned char)(op3);       \
+		x86_mem_emit ((inst), (dreg), (mem));	\
+	} while (0)
+	
 #define emit_sse_reg_membase(inst,dreg,basereg,disp,op1,op2,op3) \
 	do {	\
 		x86_codegen_pre(&(inst), 3 + kMaxMembaseEmitPadding);	\
@@ -2423,6 +2432,10 @@ typedef enum {
 
 /* SSE opcodes */
 #define x86_sse_xorpd_reg_reg(inst,dreg,reg) emit_sse_reg_reg ((inst),(dreg),(reg), 0x66, 0x0f, 0x57)
+
+#define x86_sse_movsd_reg_mem(inst,dreg,mem) emit_sse_reg_mem ((inst), (dreg), (mem), 0xf2, 0x0f, 0x10)
+
+#define x86_sse_movss_reg_mem(inst,dreg,mem) emit_sse_reg_mem ((inst), (dreg), (mem), 0xf3, 0x0f, 0x10)
 
 #define x86_sse_movsd_reg_membase(inst,dreg,basereg,disp) emit_sse_reg_membase ((inst), (dreg), (basereg), (disp), 0xf2, 0x0f, 0x10)
 
