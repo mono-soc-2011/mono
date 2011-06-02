@@ -2421,7 +2421,7 @@ typedef enum {
 		x86_membase_emit ((inst), (dreg), (basereg), (disp));	\
 	} while (0)
 	
-#define emit_sse_membase_reg(inst,basereg,reg,disp,op1,op2,op3) \
+#define emit_sse_membase_reg(inst,basereg,disp,reg,op1,op2,op3) \
 	do {	\
 		x86_codegen_pre(&(inst), 3 + kMaxMembaseEmitPadding);	\
 		*(inst)++ = (unsigned char)(op1);	\
