@@ -2010,23 +2010,14 @@ cc_signed_table [] = {
 };
 
 static unsigned char*
-emit_float_to_int (MonoCompile *cfg, guchar *code, int dreg, int size, gboolean is_signed)
+emit_float_to_int (MonoCompile *cfg, guchar *code, int dreg, int sreg, int size, gboolean is_signed)
 {
-#define XMM_TEMP_REG 0
-	/*This SSE2 optimization must not be done which OPT_SIMD in place as it clobbers xmm0.*/
-	/*The xmm pass decomposes OP_FCONV_ ops anyway anyway.*/
-	if (cfg->opt & MONO_OPT_SSE2 && size < 8 && !(cfg->opt & MONO_OPT_SIMD)) {
-		/* optimize by assigning a local var for this use so we avoid
-		 * the stack manipulations */
-		x86_alu_reg_imm (code, X86_SUB, X86_ESP, 8);
-		x86_fst_membase (code, X86_ESP, 0, TRUE, TRUE);
-		x86_sse_movsd_reg_membase (code, XMM_TEMP_REG, X86_ESP, 0);
-		x86_cvttsd2si (code, dreg, XMM_TEMP_REG);
-		x86_alu_reg_imm (code, X86_ADD, X86_ESP, 8);
+	if (X86_USE_SSE_FP(cfg)) {
+		x86_sse_cvttsd2si_reg_reg (code, dreg, sreg);
 		if (size == 1)
 			x86_widen_reg (code, dreg, dreg, is_signed, FALSE);
 		else if (size == 2)
-			x86_widen_reg (code, dreg, dreg, is_signed, TRUE);
+			x86_widen_reg (code, dreg, dreg, is_signed, TRUE);	
 		return code;
 	}
 	x86_alu_reg_imm (code, X86_SUB, X86_ESP, 4);
@@ -3488,29 +3479,36 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			}
 			break;
 		case OP_FCONV_TO_R4:
-			/* Change precision */
-			x86_alu_reg_imm (code, X86_SUB, X86_ESP, 4);
-			x86_fst_membase (code, X86_ESP, 0, FALSE, TRUE);
-			x86_fld_membase (code, X86_ESP, 0, FALSE);
-			x86_alu_reg_imm (code, X86_ADD, X86_ESP, 4);
+			// only need to change precision if using FP stack,
+			// since we keep all values in double precision in XMM registers
+			if (!X86_USE_SSE_FP(cfg)) {
+				x86_alu_reg_imm (code, X86_SUB, X86_ESP, 4);
+				x86_fst_membase (code, X86_ESP, 0, FALSE, TRUE);
+				x86_fld_membase (code, X86_ESP, 0, FALSE);
+				x86_alu_reg_imm (code, X86_ADD, X86_ESP, 4);
+			}
 			break;
 		case OP_FCONV_TO_I1:
-			code = emit_float_to_int (cfg, code, ins->dreg, 1, TRUE);
+			code = emit_float_to_int (cfg, code, ins->dreg, ins->sreg1, 1, TRUE);
 			break;
 		case OP_FCONV_TO_U1:
-			code = emit_float_to_int (cfg, code, ins->dreg, 1, FALSE);
+			code = emit_float_to_int (cfg, code, ins->dreg, ins->sreg1, 1, FALSE);
 			break;
 		case OP_FCONV_TO_I2:
-			code = emit_float_to_int (cfg, code, ins->dreg, 2, TRUE);
+			code = emit_float_to_int (cfg, code, ins->dreg, ins->sreg1, 2, TRUE);
 			break;
 		case OP_FCONV_TO_U2:
-			code = emit_float_to_int (cfg, code, ins->dreg, 2, FALSE);
+			code = emit_float_to_int (cfg, code, ins->dreg, ins->sreg1, 2, FALSE);
 			break;
 		case OP_FCONV_TO_I4:
 		case OP_FCONV_TO_I:
-			code = emit_float_to_int (cfg, code, ins->dreg, 4, TRUE);
+			code = emit_float_to_int (cfg, code, ins->dreg, ins->sreg1, 4, TRUE);
 			break;
 		case OP_FCONV_TO_I8:
+			if (X86_USE_SSE_FP(cfg)) {
+				code = emit_float_to_int (cfg, code, ins->dreg, ins->sreg1, 8, TRUE);
+				break;
+			}
 			x86_alu_reg_imm (code, X86_SUB, X86_ESP, 4);
 			x86_fnstcw_membase(code, X86_ESP, 0);
 			x86_mov_reg_membase (code, ins->dreg, X86_ESP, 0, 2);
@@ -4695,7 +4693,7 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			break;
 
 		case OP_XCONV_R8_TO_I4:
-			x86_cvttsd2si (code, ins->dreg, ins->sreg1);
+			x86_sse_cvttsd2si_reg_reg (code, ins->dreg, ins->sreg1);
 			switch (ins->backend.source_opcode) {
 			case OP_FCONV_TO_I1:
 				x86_widen_reg (code, ins->dreg, ins->dreg, TRUE, FALSE);

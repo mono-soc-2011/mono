@@ -2455,16 +2455,9 @@ typedef enum {
 
 #define x86_sse_cvtsi2ss_reg_reg(inst,dreg,reg) emit_sse_reg_reg ((inst), (dreg), (reg), 0xf3, 0x0f, 0x2a)
 
-#define x86_sse_comisd_reg_reg(inst,dreg,reg) emit_sse_reg_reg ((inst),(dreg),(reg), 0x66, 0x0f, 0x2f)
+#define x86_sse_cvttsd2si_reg_reg(inst,dreg,reg) emit_sse_reg_reg ((inst), (dreg), (reg), 0xf2, 0x0f, 0x2c)
 
-#define x86_cvttsd2si(inst,dreg,reg)	\
-	do {	\
-		x86_codegen_pre(&(inst), 4); \
-		*(inst)++ = (unsigned char)0xf2;	\
-		*(inst)++ = (unsigned char)0x0f;	\
-		*(inst)++ = (unsigned char)0x2c;	\
-		x86_reg_emit ((inst), (dreg), (reg));	\
-	} while (0)
+#define x86_sse_comisd_reg_reg(inst,dreg,reg) emit_sse_reg_reg ((inst),(dreg),(reg), 0x66, 0x0f, 0x2f)
 
 #define x86_sse_alu_reg_reg(inst,opc,dreg,reg)	\
 	do {	\
