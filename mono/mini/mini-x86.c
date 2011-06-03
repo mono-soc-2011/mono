@@ -3646,7 +3646,13 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			}
 			break;		
 		case OP_FNEG:
-			x86_fchs (code);
+			if (X86_USE_SSE_FP(cfg)) {
+				static double zero = -0.0;
+				g_assert (ins->sreg1 == ins->dreg);
+				x86_sse_xorpd_reg_mem (code, ins->dreg, &zero);
+			} else {
+				x86_fchs (code);
+			}
 			break;		
 		case OP_SIN:
 			x86_fsin (code);
@@ -3659,7 +3665,13 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			x86_fp_op_reg (code, X86_FADD, 1, TRUE);
 			break;		
 		case OP_ABS:
-			x86_fabs (code);
+			if (X86_USE_SSE_FP(cfg)) {
+				static guint64 d = 0x7fffffffffffffffUL;
+				g_assert (ins->sreg1 == ins->dreg);
+				x86_sse_andpd_reg_mem (code, ins->dreg, &d);
+			} else {
+				x86_fabs (code);
+			}
 			break;		
 		case OP_TAN: {
 			/* 
@@ -4027,7 +4039,7 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			if (X86_USE_SSE_FP(cfg)) {
 				/* transfer value to the FP stack */
 				x86_alu_reg_imm (code, X86_SUB, X86_ESP, 16);
-				x86_movsd_membase_reg (code, X86_ESP, 0, ins->sreg1);
+				x86_sse_movsd_membase_reg (code, X86_ESP, 0, ins->sreg1);
 				x86_fld_membase (code, X86_ESP, 0, TRUE);
 			}
 			
@@ -5802,15 +5814,16 @@ mono_arch_emit_inst_for_method (MonoCompile *cfg, MonoMethod *cmethod, MonoMetho
 			opcode = OP_SIN;
 		} else if (strcmp (cmethod->name, "Cos") == 0) {
 			opcode = OP_COS;
-		} else if (strcmp (cmethod->name, "Tan") == 0) {
+		} else if (strcmp (cmethod->name, "Tan") == 0 && !X86_USE_SSE_FP(cfg)) {
 			opcode = OP_TAN;
-		} else if (strcmp (cmethod->name, "Atan") == 0) {
+		} else if (strcmp (cmethod->name, "Atan") == 0 && !X86_USE_SSE_FP(cfg)) {
 			opcode = OP_ATAN;
 		} else if (strcmp (cmethod->name, "Sqrt") == 0) {
 			opcode = OP_SQRT;
 		} else if (strcmp (cmethod->name, "Abs") == 0 && fsig->params [0]->type == MONO_TYPE_R8) {
 			opcode = OP_ABS;
-		} else if (strcmp (cmethod->name, "Round") == 0 && fsig->param_count == 1 && fsig->params [0]->type == MONO_TYPE_R8) {
+		} else if (strcmp (cmethod->name, "Round") == 0 && fsig->param_count == 1 &&
+					fsig->params [0]->type == MONO_TYPE_R8 && !X86_USE_SSE_FP(cfg)) {
 			opcode = OP_ROUND;
 		}
 		
