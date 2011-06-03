@@ -3618,16 +3618,32 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			}
 			break;
 		case OP_FADD:
-			x86_fp_op_reg (code, X86_FADD, 1, TRUE);
+			if (X86_USE_SSE_FP(cfg)) {
+				x86_sse_addsd_reg_reg (code, ins->dreg, ins->sreg2);
+			} else {
+				x86_fp_op_reg (code, X86_FADD, 1, TRUE);
+			}
 			break;
 		case OP_FSUB:
-			x86_fp_op_reg (code, X86_FSUB, 1, TRUE);
+			if (X86_USE_SSE_FP(cfg)) {
+				x86_sse_subsd_reg_reg (code, ins->dreg, ins->sreg2);
+			} else {
+				x86_fp_op_reg (code, X86_FSUB, 1, TRUE);
+			}
 			break;		
 		case OP_FMUL:
-			x86_fp_op_reg (code, X86_FMUL, 1, TRUE);
+			if (X86_USE_SSE_FP(cfg)) {
+				x86_sse_mulsd_reg_reg (code, ins->dreg, ins->sreg2);
+			} else {
+				x86_fp_op_reg (code, X86_FMUL, 1, TRUE);
+			}
 			break;		
 		case OP_FDIV:
-			x86_fp_op_reg (code, X86_FDIV, 1, TRUE);
+			if (X86_USE_SSE_FP(cfg)) {
+				x86_sse_divsd_reg_reg (code, ins->dreg, ins->sreg2);
+			} else {
+				x86_fp_op_reg (code, X86_FDIV, 1, TRUE);
+			}
 			break;		
 		case OP_FNEG:
 			x86_fchs (code);

@@ -2459,6 +2459,14 @@ typedef enum {
 
 #define x86_sse_comisd_reg_reg(inst,dreg,reg) emit_sse_reg_reg ((inst),(dreg),(reg), 0x66, 0x0f, 0x2f)
 
+#define x86_sse_addsd_reg_reg(inst,dreg,reg) emit_sse_reg_reg ((inst), (dreg), (reg), 0xf2, 0x0f, 0x58)
+
+#define x86_sse_subsd_reg_reg(inst,dreg,reg) emit_sse_reg_reg ((inst), (dreg), (reg), 0xf2, 0x0f, 0x5c)
+
+#define x86_sse_mulsd_reg_reg(inst,dreg,reg) emit_sse_reg_reg ((inst), (dreg), (reg), 0xf2, 0x0f, 0x59)
+
+#define x86_sse_divsd_reg_reg(inst,dreg,reg) emit_sse_reg_reg ((inst), (dreg), (reg), 0xf2, 0x0f, 0x5e)
+
 #define x86_sse_alu_reg_reg(inst,opc,dreg,reg)	\
 	do {	\
 		x86_codegen_pre(&(inst), 3); \
