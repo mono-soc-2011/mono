@@ -121,7 +121,7 @@ start_handler: len:16
 endfinally: len:16 nacl:21
 endfilter: src1:a len:16 nacl:21
 
-ckfinite: dest:f src1:f len:32
+ckfinite: dest:f src1:f len:38
 ceq: dest:y len:6
 cgt: dest:y len:6
 cgt.un: dest:y len:6
@@ -223,7 +223,7 @@ float_div: dest:f src1:f src2:f len:4
 float_div_un: dest:f src1:f src2:f len:2
 float_rem: dest:f src1:f src2:f len:17
 float_rem_un: dest:f src1:f src2:f len:17
-float_neg: dest:f src1:f len:2
+float_neg: dest:f src1:f len:9
 float_not: dest:f src1:f len:2
 float_conv_to_i1: dest:y src1:f len:39
 float_conv_to_i2: dest:y src1:f len:39
