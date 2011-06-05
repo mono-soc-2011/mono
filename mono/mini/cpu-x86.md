@@ -377,9 +377,9 @@ cmov_ile_un: dest:i src1:i src2:i len:16 clob:1
 cmov_ilt_un: dest:i src1:i src2:i len:16 clob:1
 
 long_conv_to_ovf_i4_2: dest:i src1:i src2:i len:30
-long_conv_to_r8_2: dest:f src1:i src2:i len:14 
-long_conv_to_r4_2: dest:f src1:i src2:i len:14
-long_conv_to_r_un_2: dest:f src1:i src2:i len:26 
+long_conv_to_r8_2: dest:f src1:i src2:i len:20
+long_conv_to_r4_2: dest:f src1:i src2:i len:20
+long_conv_to_r_un_2: dest:f src1:i src2:i len:32
 
 fmove: dest:f src1:f len: 4
 float_conv_to_r4: dest:f src1:f  len:12

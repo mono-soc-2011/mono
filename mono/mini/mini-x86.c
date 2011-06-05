@@ -3528,7 +3528,12 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			x86_fild_membase (code, X86_ESP, 0, TRUE);
 			/* Change precision */
 			x86_fst_membase (code, X86_ESP, 0, TRUE, TRUE);
-			x86_fld_membase (code, X86_ESP, 0, TRUE);
+			
+			if (X86_USE_SSE_FP(cfg)) {
+				x86_sse_movsd_reg_membase(code, ins->dreg, X86_ESP, 0);
+			} else {
+				x86_fld_membase (code, X86_ESP, 0, TRUE);
+			}
 			x86_alu_reg_imm (code, X86_ADD, X86_ESP, 8);
 			break;
 		case OP_LCONV_TO_R4_2:
@@ -3537,7 +3542,12 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			x86_fild_membase (code, X86_ESP, 0, TRUE);
 			/* Change precision */
 			x86_fst_membase (code, X86_ESP, 0, FALSE, TRUE);
-			x86_fld_membase (code, X86_ESP, 0, FALSE);
+			
+			if (X86_USE_SSE_FP(cfg)) {
+				x86_sse_movss_reg_membase(code, ins->dreg, X86_ESP, 0);
+			} else {
+				x86_fld_membase (code, X86_ESP, 0, FALSE);
+			}
 			x86_alu_reg_imm (code, X86_ADD, X86_ESP, 8);
 			break;
 		case OP_LCONV_TO_R_UN_2: { 
@@ -3561,10 +3571,13 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 
 			/* Change precision */
 			x86_fst_membase (code, X86_ESP, 0, TRUE, TRUE);
-			x86_fld_membase (code, X86_ESP, 0, TRUE);
-
+			
+			if (X86_USE_SSE_FP(cfg)) {
+				x86_sse_movsd_reg_membase(code, ins->dreg, X86_ESP, 0);
+			} else {
+				x86_fld_membase (code, X86_ESP, 0, TRUE);
+			}
 			x86_alu_reg_imm (code, X86_ADD, X86_ESP, 8);
-
 			break;
 		}
 		case OP_LCONV_TO_OVF_I:
@@ -3653,7 +3666,7 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			} else {
 				x86_fchs (code);
 			}
-			break;		
+			break;
 		case OP_SIN:
 			x86_fsin (code);
 			x86_fldz (code);
