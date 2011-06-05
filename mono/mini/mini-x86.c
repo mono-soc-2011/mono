@@ -1767,7 +1767,15 @@ if (ins->inst_true_bb->native_offset) { \
 		} else {	\
 			EMIT_COND_BRANCH (tins, cond, signed);	\
 		}			\
-	} while (0); 
+	} while (0);
+	
+#define EMIT_SSE2_FPFUNC(code, op, dreg, sreg1) do { \
+    x86_sse_movsd_membase_reg (code, X86_ESP, -8, (sreg1)); \
+	x86_fld_membase (code, X86_ESP, -8, TRUE); \
+	x86_ ##op (code); \
+	x86_fst_membase (code, X86_ESP, -8, TRUE, TRUE); \
+	x86_sse_movsd_reg_membase (code, (dreg), X86_ESP, -8); \
+} while (0);
 
 #define EMIT_FPCOMPARE(code) do { \
 	x86_fcompp (code); \
@@ -3668,11 +3676,19 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			}
 			break;
 		case OP_SIN:
+			if (X86_USE_SSE_FP(cfg)) {
+				EMIT_SSE2_FPFUNC(code, fsin, ins->dreg, ins->sreg1);
+				break;
+			}
 			x86_fsin (code);
 			x86_fldz (code);
 			x86_fp_op_reg (code, X86_FADD, 1, TRUE);
 			break;		
 		case OP_COS:
+			if (X86_USE_SSE_FP(cfg)) {
+				EMIT_SSE2_FPFUNC(code, fcos, ins->dreg, ins->sreg1);
+				break;
+			}
 			x86_fcos (code);
 			x86_fldz (code);
 			x86_fp_op_reg (code, X86_FADD, 1, TRUE);
@@ -3686,7 +3702,7 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 				x86_fabs (code);
 			}
 			break;		
-		case OP_TAN: {
+		case OP_TAN: {		/* not called when using SSE math */
 			/* 
 			 * it really doesn't make sense to inline all this code,
 			 * it's here just to show that things may not be as simple 
@@ -3721,16 +3737,20 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			x86_pop_reg (code, X86_EAX);
 			break;
 		}
-		case OP_ATAN:
+		case OP_ATAN:	/* not called when using SSE math */
 			x86_fld1 (code);
 			x86_fpatan (code);
 			x86_fldz (code);
 			x86_fp_op_reg (code, X86_FADD, 1, TRUE);
 			break;		
 		case OP_SQRT:
+			if (X86_USE_SSE_FP(cfg)) {
+				EMIT_SSE2_FPFUNC(code, fsqrt, ins->dreg, ins->sreg1);
+				break;
+			}
 			x86_fsqrt (code);
 			break;
-		case OP_ROUND:
+		case OP_ROUND:	/* not called when using SSE math */
 			x86_frndint (code);
 			break;
 		case OP_IMIN:

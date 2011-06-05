@@ -288,12 +288,12 @@ adc_imm: dest:i src1:i len:6 clob:1
 sbb: dest:i src1:i src2:i len:2 clob:1
 sbb_imm: dest:i src1:i len:6 clob:1
 br_reg: src1:i len:2 nacl:5
-sin: dest:f src1:f len:6
-cos: dest:f src1:f len:6
-abs: dest:f src1:f len:2
+sin: dest:f src1:f len:26
+cos: dest:f src1:f len:26
+abs: dest:f src1:f len:7
 tan: dest:f src1:f len:49
 atan: dest:f src1:f len:8
-sqrt: dest:f src1:f len:2
+sqrt: dest:f src1:f len:26
 round: dest:f src1:f len:2
 bigmul: len:2 dest:l src1:a src2:i
 bigmul_un: len:2 dest:l src1:a src2:i
