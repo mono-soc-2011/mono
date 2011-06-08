@@ -3450,8 +3450,7 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			break;
 		case OP_LOADR4_MEMBASE:
 			if (X86_USE_SSE_FP(cfg)) {
-				x86_sse_movss_reg_membase (code, ins->dreg, ins->inst_basereg, ins->inst_offset);
-				x86_sse_cvtss2sd_reg_reg (code, ins->dreg, ins->dreg);
+				x86_sse_cvtss2sd_reg_membase (code, ins->dreg, ins->inst_basereg, ins->inst_offset);
 			} else {
 				x86_fld_membase (code, ins->inst_basereg, ins->inst_offset, FALSE);
 			}
