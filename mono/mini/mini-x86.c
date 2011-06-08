@@ -1801,6 +1801,15 @@ if (ins->inst_true_bb->native_offset) { \
 	x86_fnstsw (code); \
 } while (0); 
 
+#define EMIT_FAST_FPCOMPARE(cfg, code, ins) \
+		do { \
+				if (X86_USE_SSE_FP(cfg)) { \
+					x86_sse_comisd_reg_reg ((code), (ins)->sreg1, (ins)->sreg2); \
+				} else { \
+					x86_fcomip (code, 1); \
+					x86_fstp (code, 0); \
+				} \
+		} while (0)
 
 static guint8*
 emit_call (MonoCompile *cfg, guint8 *code, guint32 patch_type, gconstpointer data)
@@ -3772,9 +3781,8 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			break;
 		}
 		case OP_FCOMPARE:
-			if (cfg->opt & MONO_OPT_FCMOV) {
-				x86_fcomip (code, 1);
-				x86_fstp (code, 0);
+			if (cfg->opt & MONO_OPT_FCMOV || X86_USE_SSE_FP(cfg)) {
+				EMIT_FAST_FPCOMPARE(cfg, code, ins);
 				break;
 			}
 			/* this overwrites EAX */
@@ -3782,14 +3790,13 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			x86_alu_reg_imm (code, X86_AND, X86_EAX, X86_FP_CC_MASK);
 			break;
 		case OP_FCEQ:
-			if (cfg->opt & MONO_OPT_FCMOV) {
+			if (cfg->opt & MONO_OPT_FCMOV || X86_USE_SSE_FP(cfg)) {
 				/* zeroing the register at the start results in 
 				 * shorter and faster code (we can also remove the widening op)
 				 */
 				guchar *unordered_check;
 				x86_alu_reg_reg (code, X86_XOR, ins->dreg, ins->dreg);
-				x86_fcomip (code, 1);
-				x86_fstp (code, 0);
+				EMIT_FAST_FPCOMPARE(cfg, code, ins);
 				unordered_check = code;
 				x86_branch8 (code, X86_CC_P, 0, FALSE);
 				x86_set_reg (code, X86_CC_EQ, ins->dreg, FALSE);
@@ -3810,13 +3817,12 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			break;
 		case OP_FCLT:
 		case OP_FCLT_UN:
-			if (cfg->opt & MONO_OPT_FCMOV) {
+			if (cfg->opt & MONO_OPT_FCMOV || X86_USE_SSE_FP(cfg)) {
 				/* zeroing the register at the start results in 
 				 * shorter and faster code (we can also remove the widening op)
 				 */
 				x86_alu_reg_reg (code, X86_XOR, ins->dreg, ins->dreg);
-				x86_fcomip (code, 1);
-				x86_fstp (code, 0);
+				EMIT_FAST_FPCOMPARE(cfg, code, ins);
 				if (ins->opcode == OP_FCLT_UN) {
 					guchar *unordered_check = code;
 					guchar *jump_to_end;
@@ -3856,14 +3862,13 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			break;
 		case OP_FCGT:
 		case OP_FCGT_UN:
-			if (cfg->opt & MONO_OPT_FCMOV) {
+			if (cfg->opt & MONO_OPT_FCMOV || X86_USE_SSE_FP(cfg)) {
 				/* zeroing the register at the start results in 
 				 * shorter and faster code (we can also remove the widening op)
 				 */
 				guchar *unordered_check;
 				x86_alu_reg_reg (code, X86_XOR, ins->dreg, ins->dreg);
-				x86_fcomip (code, 1);
-				x86_fstp (code, 0);
+				EMIT_FAST_FPCOMPARE(cfg, code, ins);
 				if (ins->opcode == OP_FCGT) {
 					unordered_check = code;
 					x86_branch8 (code, X86_CC_P, 0, FALSE);
@@ -3898,7 +3903,7 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 				x86_pop_reg (code, X86_EAX);
 			break;
 		case OP_FBEQ:
-			if (cfg->opt & MONO_OPT_FCMOV) {
+			if (cfg->opt & MONO_OPT_FCMOV || X86_USE_SSE_FP(cfg)) {
 				guchar *jump = code;
 				x86_branch8 (code, X86_CC_P, 0, TRUE);
 				EMIT_COND_BRANCH (ins, X86_CC_EQ, FALSE);
@@ -3910,7 +3915,7 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			break;
 		case OP_FBNE_UN:
 			/* Branch if C013 != 100 */
-			if (cfg->opt & MONO_OPT_FCMOV) {
+			if (cfg->opt & MONO_OPT_FCMOV || X86_USE_SSE_FP(cfg)) {
 				/* branch if !ZF or (PF|CF) */
 				EMIT_COND_BRANCH (ins, X86_CC_NE, FALSE);
 				EMIT_COND_BRANCH (ins, X86_CC_P, FALSE);
@@ -3921,14 +3926,14 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			EMIT_COND_BRANCH (ins, X86_CC_NE, FALSE);
 			break;
 		case OP_FBLT:
-			if (cfg->opt & MONO_OPT_FCMOV) {
+			if (cfg->opt & MONO_OPT_FCMOV || X86_USE_SSE_FP(cfg)) {
 				EMIT_COND_BRANCH (ins, X86_CC_GT, FALSE);
 				break;
 			}
 			EMIT_COND_BRANCH (ins, X86_CC_EQ, FALSE);
 			break;
 		case OP_FBLT_UN:
-			if (cfg->opt & MONO_OPT_FCMOV) {
+			if (cfg->opt & MONO_OPT_FCMOV || X86_USE_SSE_FP(cfg)) {
 				EMIT_COND_BRANCH (ins, X86_CC_P, FALSE);
 				EMIT_COND_BRANCH (ins, X86_CC_GT, FALSE);
 				break;
@@ -3948,7 +3953,7 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			break;
 		case OP_FBGT:
 		case OP_FBGT_UN:
-			if (cfg->opt & MONO_OPT_FCMOV) {
+			if (cfg->opt & MONO_OPT_FCMOV || X86_USE_SSE_FP(cfg)) {
 				if (ins->opcode == OP_FBGT) {
 					guchar *br1;
 
@@ -3979,7 +3984,7 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			break;
 		case OP_FBGE:
 			/* Branch if C013 == 100 or 001 */
-			if (cfg->opt & MONO_OPT_FCMOV) {
+			if (cfg->opt & MONO_OPT_FCMOV || X86_USE_SSE_FP(cfg)) {
 				guchar *br1;
 
 				/* skip branch if C1=1 */
@@ -3997,7 +4002,7 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			break;
 		case OP_FBGE_UN:
 			/* Branch if C013 == 000 */
-			if (cfg->opt & MONO_OPT_FCMOV) {
+			if (cfg->opt & MONO_OPT_FCMOV || X86_USE_SSE_FP(cfg)) {
 				EMIT_COND_BRANCH (ins, X86_CC_LE, FALSE);
 				break;
 			}
@@ -4005,7 +4010,7 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			break;
 		case OP_FBLE:
 			/* Branch if C013=000 or 100 */
-			if (cfg->opt & MONO_OPT_FCMOV) {
+			if (cfg->opt & MONO_OPT_FCMOV || X86_USE_SSE_FP(cfg)) {
 				guchar *br1;
 
 				/* skip branch if C1=1 */
@@ -4022,7 +4027,7 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			break;
 		case OP_FBLE_UN:
 			/* Branch if C013 != 001 */
-			if (cfg->opt & MONO_OPT_FCMOV) {
+			if (cfg->opt & MONO_OPT_FCMOV || X86_USE_SSE_FP(cfg)) {
 				EMIT_COND_BRANCH (ins, X86_CC_P, FALSE);
 				EMIT_COND_BRANCH (ins, X86_CC_GE, FALSE);
 				break;
