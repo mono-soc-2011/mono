@@ -1238,33 +1238,6 @@ mono_arch_create_vars (MonoCompile *cfg)
 	}
 }
 
-/*
- * It is expensive to adjust esp for each individual fp argument pushed on the stack
- * so we try to do it just once when we have multiple fp arguments in a row.
- * We don't use this mechanism generally because for int arguments the generated code
- * is slightly bigger and new generation cpus optimize away the dependency chains
- * created by push instructions on the esp value.
- * fp_arg_setup is the first argument in the execution sequence where the esp register
- * is modified.
- */
-static G_GNUC_UNUSED int
-collect_fp_stack_space (MonoMethodSignature *sig, int start_arg, int *fp_arg_setup)
-{
-	int fp_space = 0;
-	MonoType *t;
-
-	for (; start_arg < sig->param_count; ++start_arg) {
-		t = mini_type_get_underlying_type (NULL, sig->params [start_arg]);
-		if (!t->byref && t->type == MONO_TYPE_R8) {
-			fp_space += sizeof (double);
-			*fp_arg_setup = start_arg;
-		} else {
-			break;
-		}
-	}
-	return fp_space;
-}
-
 static void
 emit_sig_cookie (MonoCompile *cfg, MonoCallInst *call, CallInfo *cinfo)
 {
@@ -3515,12 +3488,6 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 				x86_fild_membase (code, X86_ESP, 0, TRUE);
 				x86_alu_reg_imm (code, X86_ADD, X86_ESP, 8);
 			}
-			break;
-		case OP_X86_FP_LOAD_I8:
-			x86_fild_membase (code, ins->inst_basereg, ins->inst_offset, TRUE);
-			break;
-		case OP_X86_FP_LOAD_I4:
-			x86_fild_membase (code, ins->inst_basereg, ins->inst_offset, FALSE);
 			break;
 		case OP_FCONV_TO_R4:
 			/* Change precision */
