@@ -103,7 +103,6 @@ struct sigcontext {
 #define MONO_ARCH_CALLEE_XREGS (0xff & ~(regmask (MONO_MAX_XREGS)))
 #define MONO_ARCH_CALLEE_SAVED_XREGS 0
 
-#define MONO_ARCH_USE_FPSTACK TRUE
 #define MONO_ARCH_FPSTACK_SIZE 6
 
 #define MONO_ARCH_INST_FIXED_REG(desc) (((desc == ' ') || (desc == 'i')) ? -1 : ((desc == 's') ? X86_ECX : ((desc == 'a') ? X86_EAX : ((desc == 'd') ? X86_EDX : ((desc == 'l') ? X86_EAX : -1)))))

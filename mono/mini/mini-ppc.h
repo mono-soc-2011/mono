@@ -108,9 +108,6 @@ typedef struct MonoCompileArch {
 #endif
 #define MONO_ARCH_CALLEE_SAVED_FREGS (~(MONO_ARCH_CALLEE_FREGS | 1))
 
-#define MONO_ARCH_USE_FPSTACK FALSE
-#define MONO_ARCH_FPSTACK_SIZE 0
-
 #ifdef __mono_ppc64__
 #define MONO_ARCH_INST_FIXED_REG(desc) (((desc) == 'a')? ppc_r3:\
 					((desc) == 'g'? ppc_f1:-1))

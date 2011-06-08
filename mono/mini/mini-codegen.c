@@ -1049,11 +1049,9 @@ mono_local_regalloc (MonoCompile *cfg, MonoBasicBlock *bb)
 	const char *spec;
 	unsigned char spec_src1, spec_dest;
 	int bank = 0;
-#if MONO_ARCH_USE_FPSTACK
 	gboolean has_fp = FALSE;
 	int fpstack [8];
 	int sp = 0;
-#endif
 	int num_sregs = 0;
 	int sregs [MONO_MAX_SRC_REGS];
 
@@ -1165,16 +1163,16 @@ mono_local_regalloc (MonoCompile *cfg, MonoBasicBlock *bb)
 
 		num_sregs = mono_inst_get_src_registers (ins, sregs);
 
-#if MONO_ARCH_USE_FPSTACK
-		if (dreg_is_fp (spec)) {
-			has_fp = TRUE;
-		} else {
-			for (j = 0; j < num_sregs; ++j) {
-				if (sreg_is_fp (j, spec))
-					has_fp = TRUE;
+		if (cfg->use_fp_stack) {
+			if (dreg_is_fp (spec)) {
+				has_fp = TRUE;
+			} else {
+				for (j = 0; j < num_sregs; ++j) {
+					if (sreg_is_fp (j, spec))
+						has_fp = TRUE;
+				}
 			}
 		}
-#endif
 
 		for (j = 0; j < num_sregs; ++j) {
 			int sreg = sregs [j];
@@ -2127,12 +2125,11 @@ mono_local_regalloc (MonoCompile *cfg, MonoBasicBlock *bb)
 
 	// FIXME: Set MAX_FREGS to 8
 	// FIXME: Optimize generated code
-#if MONO_ARCH_USE_FPSTACK
 	/*
 	 * Make a forward pass over the code, simulating the fp stack, making sure the
 	 * arguments required by the fp opcodes are at the top of the stack.
 	 */
-	if (has_fp) {
+	if (cfg->use_fp_stack && has_fp) {
 		MonoInst *prev = NULL;
 		MonoInst *fxch;
 		int tmp;
@@ -2279,7 +2276,6 @@ mono_local_regalloc (MonoCompile *cfg, MonoBasicBlock *bb)
 			}
 		}
 	}
-#endif
 }
 
 CompRelation

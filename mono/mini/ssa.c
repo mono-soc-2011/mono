@@ -1282,7 +1282,7 @@ mono_ssa_deadce (MonoCompile *cfg)
 			MonoInst *def = info->def;
 
 			/* Eliminating FMOVE could screw up the fp stack */
-			if (MONO_IS_MOVE (def) && (!MONO_ARCH_USE_FPSTACK || (def->opcode != OP_FMOVE))) {
+			if (MONO_IS_MOVE (def) && (!cfg->use_fp_stack || (def->opcode != OP_FMOVE))) {
 				MonoInst *src_var = get_vreg_to_inst (cfg, def->sreg1);
 				if (src_var && !(src_var->flags & (MONO_INST_VOLATILE|MONO_INST_INDIRECT)))
 					add_to_dce_worklist (cfg, info, MONO_VARINFO (cfg, src_var->inst_c0), &work_list);

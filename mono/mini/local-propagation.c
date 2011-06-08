@@ -165,7 +165,7 @@ restart:
 					/* This avoids propagating local vregs across calls */
 					((get_vreg_to_inst (cfg, def->sreg1) || !defs [def->sreg1] || (def_index [def->sreg1] >= last_call_index) || (def->opcode == OP_VMOVE))) &&
 					!(defs [def->sreg1] && defs [def->sreg1]->next == def) &&
-					(!MONO_ARCH_USE_FPSTACK || (def->opcode != OP_FMOVE)) &&
+					(!cfg->use_fp_stack || (def->opcode != OP_FMOVE)) &&
 					(def->opcode != OP_FMOVE)) {
 					int vreg = def->sreg1;
 
@@ -184,7 +184,7 @@ restart:
 				/* is_inst_imm is only needed for binops */
 				if ((((def->opcode == OP_ICONST) || ((sizeof (gpointer) == 8) && (def->opcode == OP_I8CONST))) &&
 					 (((srcindex == 0) && (ins->sreg2 == -1)) || mono_arch_is_inst_imm (def->inst_c0))) || 
-					(!MONO_ARCH_USE_FPSTACK && (def->opcode == OP_R8CONST))) {
+					(!cfg->use_fp_stack && (def->opcode == OP_R8CONST))) {
 					guint32 opcode2;
 
 					/* srcindex == 1 -> binop, ins->sreg2 == -1 -> unop */
@@ -407,10 +407,10 @@ restart:
 }
 
 static inline gboolean
-reg_is_softreg_no_fpstack (int reg, const char spec)
+reg_is_softreg_no_fpstack (MonoCompile *cfg, int reg, const char spec)
 {
 	return (spec == 'i' && reg >= MONO_MAX_IREGS)
-		|| ((spec == 'f' && reg >= MONO_MAX_FREGS) && !MONO_ARCH_USE_FPSTACK)
+		|| ((spec == 'f' && reg >= MONO_MAX_FREGS) && !cfg->use_fp_stack)
 #ifdef MONO_ARCH_SIMD_INTRINSICS
 		|| (spec == 'x' && reg >= MONO_MAX_XREGS)
 #endif
@@ -544,7 +544,7 @@ mono_local_deadce (MonoCompile *cfg)
 			}
 
 			/* Enabling this on x86 could screw up the fp stack */
-			if (reg_is_softreg_no_fpstack (ins->dreg, spec [MONO_INST_DEST])) {
+			if (reg_is_softreg_no_fpstack (cfg, ins->dreg, spec [MONO_INST_DEST])) {
 				/* 
 				 * Assignments to global vregs can only be eliminated if there is another
 				 * assignment to the same vreg later in the same bblock.

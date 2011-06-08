@@ -26,9 +26,6 @@
 
 #define MONO_ARCH_CALLEE_SAVED_FREGS 0
 
-#define MONO_ARCH_USE_FPSTACK FALSE
-#define MONO_ARCH_FPSTACK_SIZE 0
-
 #define MONO_ARCH_INST_FIXED_REG(desc) ((desc == 'r') ? IA64_R8 : ((desc == 'g') ? 8 : -1))
 #define MONO_ARCH_INST_IS_FLOAT(desc) ((desc == 'f') || (desc == 'g'))
 #define MONO_ARCH_INST_SREG2_MASK(ins) (0)

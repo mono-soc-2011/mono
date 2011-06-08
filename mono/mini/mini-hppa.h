@@ -55,8 +55,6 @@
 /* hppa_fr12 - hppa_fr21 */
 #define MONO_ARCH_CALLEE_SAVED_FREGS (0x3ff << hppa_fr12)
 
-#define MONO_ARCH_USE_FPSTACK FALSE
-#define MONO_ARCH_FPSTACK_SIZE 0
 #define MONO_ARCH_INST_FIXED_REG(desc) ((desc == 'o') ? hppa_r0 : (desc == 'a') ? hppa_r28 : (desc == 'L') ? hppa_r29 : -1)
 #define MONO_ARCH_INST_SREG2_MASK(ins) (0)
 

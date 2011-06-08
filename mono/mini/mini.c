@@ -4227,6 +4227,12 @@ mini_method_compile (MonoMethod *method, guint32 opts, MonoDomain *domain, gbool
 			MONO_PROBE_METHOD_COMPILE_END (method, FALSE);
 		return cfg;
 	}
+	
+#ifdef TARGET_X86
+	if (!(cfg->opt & MONO_OPT_SSE2)) {
+		cfg->use_fp_stack = TRUE;
+	}
+#endif
 
 #ifdef ENABLE_LLVM
 	{

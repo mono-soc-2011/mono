@@ -1243,6 +1243,7 @@ typedef struct {
 	guint            explicit_null_checks : 1;
 	guint            compute_gc_maps : 1;
 	guint            soft_breakpoints : 1;
+	guint            use_fp_stack : 1; /* use FP stack for regalloc */
 	gpointer         debug_info;
 	guint32          lmf_offset;
     guint16          *intvars;

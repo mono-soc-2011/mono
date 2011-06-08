@@ -98,9 +98,6 @@ struct MonoLMF
 
 #define ALPHA_IS_CALLEE_SAVED_REG(reg) (MONO_ARCH_CALLEE_SAVED_REGS & (1 << (reg)))
 
-#define MONO_ARCH_USE_FPSTACK FALSE
-#define MONO_ARCH_FPSTACK_SIZE 0
-
 #define MONO_CONTEXT_GET_IP(ctx) ((gpointer)((ctx)->uc_mcontext.sc_pc))
 #define MONO_CONTEXT_GET_BP(ctx) ((gpointer)((ctx)->uc_mcontext.sc_regs[15]))
 #define MONO_CONTEXT_GET_SP(ctx) ((gpointer)((ctx)->uc_mcontext.sc_regs[30]))
@@ -141,9 +138,6 @@ struct MonoLMF
 #define MONO_ARCH_CALLEE_SAVED_REGS ~(MONO_ARCH_CALLEE_REGS)
 
 #define MONO_ARCH_CALLEE_SAVED_FREGS 0
-
-#define MONO_ARCH_USE_FPSTACK FALSE
-#define MONO_ARCH_FPSTACK_SIZE 0
 
 #define MONO_ARCH_INST_FIXED_REG(desc) ((desc == 'r') ? IA64_R8 : ((desc == 'g') ? 8 : -1))
 #define MONO_ARCH_INST_IS_FLOAT(desc) ((desc == 'f') || (desc == 'g'))

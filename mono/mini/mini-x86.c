@@ -65,7 +65,7 @@ static CRITICAL_SECTION mini_arch_mutex;
 
 #define X86_IS_CALLEE_SAVED_REG(reg) (((reg) == X86_EBX) || ((reg) == X86_EDI) || ((reg) == X86_ESI))
 
-#define X86_USE_SSE_FP(cfg) (((cfg)->opt & MONO_OPT_SSE2) != 0)
+#define X86_USE_SSE_FP(cfg) (!cfg->use_fp_stack)
 
 MonoBreakpointInfo
 mono_breakpoint_info [MONO_BREAKPOINT_ARRAY_SIZE];

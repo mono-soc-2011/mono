@@ -160,8 +160,8 @@ storei4_membase_imm: dest:b len:10
 storei4_membase_reg: dest:b src1:i len:7
 storei8_membase_imm: dest:b 
 storei8_membase_reg: dest:b src1:i 
-storer4_membase_reg: dest:b src1:f len:7
-storer8_membase_reg: dest:b src1:f len:7
+storer4_membase_reg: dest:b src1:f len:13
+storer8_membase_reg: dest:b src1:f len:9
 store_mem_imm: len:12
 load_membase: dest:i src1:b len:7
 loadi1_membase: dest:y src1:b len:7
@@ -171,8 +171,8 @@ loadu2_membase: dest:i src1:b len:7
 loadi4_membase: dest:i src1:b len:7
 loadu4_membase: dest:i src1:b len:7
 loadi8_membase: dest:i src1:b
-loadr4_membase: dest:f src1:b len:7
-loadr8_membase: dest:f src1:b len:7
+loadr4_membase: dest:f src1:b len:13
+loadr8_membase: dest:f src1:b len:9
 loadu4_mem: dest:i len:9
 move: dest:i src1:i len:2
 addcc_imm: dest:i src1:i len:6 clob:1
