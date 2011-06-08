@@ -1783,14 +1783,15 @@ if (ins->inst_true_bb->native_offset) { \
 } while (0); 
 
 #define EMIT_FAST_FPCOMPARE(cfg, code, ins) \
-		do { \
-				if (X86_USE_SSE_FP(cfg)) { \
-					x86_sse_comisd_reg_reg ((code), (ins)->sreg1, (ins)->sreg2); \
-				} else { \
-					x86_fcomip (code, 1); \
-					x86_fstp (code, 0); \
-				} \
-		} while (0)
+	do { \
+		if (X86_USE_SSE_FP(cfg)) { \
+			x86_sse_comisd_reg_reg ((code), (ins)->sreg2, (ins)->sreg1); \
+		} else { \
+			x86_fcomip (code, 1); \
+			x86_fstp (code, 0); \
+		} \
+	} while (0)
+
 
 static guint8*
 emit_call (MonoCompile *cfg, guint8 *code, guint32 patch_type, gconstpointer data)
