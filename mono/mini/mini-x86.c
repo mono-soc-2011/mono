@@ -3733,10 +3733,16 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			x86_cmov_reg (code, X86_CC_LT, FALSE, ins->dreg, ins->sreg2);
 			break;
 		case OP_X86_FPOP:
-			x86_fstp (code, 0);
+			/* nothing to do if not using the FP stack */
+			if (!X86_USE_SSE_FP(cfg)) {
+				x86_fstp (code, 0);
+			}
 			break;
 		case OP_X86_FXCH:
-			x86_fxch (code, ins->inst_imm);
+			/* nothing to do if not using the FP stack */
+			if (!X86_USE_SSE_FP(cfg)) {
+				x86_fxch (code, ins->inst_imm);
+			}
 			break;
 		case OP_FREM: {
 			guint8 *l1, *l2;
@@ -4018,7 +4024,13 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			EMIT_COND_BRANCH (ins, X86_CC_NE, FALSE);
 			break;
 		case OP_CKFINITE: {
-			guchar *br1;
+			if (X86_USE_SSE_FP(cfg)) {
+				/* transfer value to the FP stack */
+				x86_alu_reg_imm (code, X86_SUB, X86_ESP, 16);
+				x86_movsd_membase_reg (code, X86_ESP, 0, ins->sreg1);
+				x86_fld_membase (code, X86_ESP, 0, TRUE);
+			}
+			
 			x86_push_reg (code, X86_EAX);
 			x86_fxam (code);
 			x86_fnstsw (code);
@@ -4026,14 +4038,18 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			x86_alu_reg_imm (code, X86_CMP, X86_EAX, X86_FP_C0);
 			x86_pop_reg (code, X86_EAX);
 
-			/* Have to clean up the fp stack before throwing the exception */
-			br1 = code;
-			x86_branch8 (code, X86_CC_NE, 0, FALSE);
-
-			x86_fstp (code, 0);			
-			EMIT_COND_SYSTEM_EXCEPTION (X86_CC_EQ, FALSE, "ArithmeticException");
-
-			x86_patch (br1, code);
+			if (X86_USE_SSE_FP(cfg)) {
+				x86_fstp (code, 0);
+				EMIT_COND_SYSTEM_EXCEPTION (X86_CC_EQ, FALSE, "ArithmeticException");
+				x86_alu_reg_imm (code, X86_ADD, X86_ESP, 16);
+			} else {
+				/* Have to clean up the fp stack before throwing the exception */
+				guchar *br1 = code;
+				x86_branch8 (code, X86_CC_NE, 0, FALSE);
+				x86_fstp (code, 0);			
+				EMIT_COND_SYSTEM_EXCEPTION (X86_CC_EQ, FALSE, "ArithmeticException");
+				x86_patch (br1, code);
+			}
 			break;
 		}
 		case OP_TLS_GET: {
