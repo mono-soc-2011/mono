@@ -2433,6 +2433,8 @@ typedef enum {
 /* SSE opcodes */
 #define x86_sse_xorpd_reg_reg(inst,dreg,reg) emit_sse_reg_reg ((inst),(dreg),(reg), 0x66, 0x0f, 0x57)
 
+#define x86_sse_movsd_reg_reg(inst,dreg,reg) emit_sse_reg_reg ((inst), (dreg), (reg), 0xf2, 0x0f, 0x10)
+
 #define x86_sse_movsd_reg_mem(inst,dreg,mem) emit_sse_reg_mem ((inst), (dreg), (mem), 0xf2, 0x0f, 0x10)
 
 #define x86_sse_movss_reg_mem(inst,dreg,mem) emit_sse_reg_mem ((inst), (dreg), (mem), 0xf3, 0x0f, 0x10)

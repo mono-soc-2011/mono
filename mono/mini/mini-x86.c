@@ -3615,6 +3615,9 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 		}
 		case OP_FMOVE:
 			/* Not needed on the fp stack */
+			if (X86_USE_SSE_FP(cfg) && ins->dreg != ins->sreg1) {
+				x86_sse_movsd_reg_reg (code, ins->dreg, ins->sreg1);
+			}
 			break;
 		case OP_FADD:
 			x86_fp_op_reg (code, X86_FADD, 1, TRUE);
