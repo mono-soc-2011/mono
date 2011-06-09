@@ -25,51 +25,150 @@
 #if NET_4_0 || MOBILE
 
 using System;
+using System.Threading;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace System.Threading.Tasks
 {
 	public class ConcurrentExclusiveSchedulerPair : IDisposable
 	{
-		public ConcurrentExclusiveSchedulerPair ()
+		readonly int maxConcurrencyLevel;
+		readonly int maxItemsPerTask;
+
+		readonly TaskScheduler target;
+		readonly TaskFactory factory;
+		readonly Action taskHandler;
+
+		readonly ConcurrentQueue<Task> concurrentTasks = new ConcurrentQueue<Task> ();
+		readonly ConcurrentQueue<Task> exclusiveTasks = new ConcurrentQueue<Task> ();
+
+		readonly ReaderWriterLockSlim rwl = new ReaderWriterLockSlim ();
+		readonly TaskCompletionSource<object> completion = new TaskCompletionSource<object> ();
+		readonly ConcurrentTaskScheduler concurrent;
+		readonly ExclusiveTaskScheduler exclusive;
+
+		int numTask;
+
+		class ExclusiveTaskScheduler : TaskScheduler
 		{
-			throw new NotImplementedException ();
+			ConcurrentExclusiveSchedulerPair scheduler;
+
+			public ExclusiveTaskScheduler (ConcurrentExclusiveSchedulerPair scheduler)
+			{
+				this.scheduler = scheduler;
+			}
+
+			public override int MaximumConcurrencyLevel {
+				get {
+					return scheduler.maxConcurrencyLevel;
+				}
+			}
+
+			protected override void QueueTask (Task t)
+			{
+				scheduler.QueueExclusive (t);
+			}
+
+			protected override bool TryExecuteTaskInline (Task task, bool taskWasPreviouslyQueued)
+			{
+				if (task.Status != TaskStatus.Created)
+					return false;
+
+				task.RunSynchronously (scheduler.target);
+				return true;
+			}
+
+			protected override IEnumerable<Task> GetScheduledTasks ()
+			{
+				throw new NotImplementedException ();
+			}
 		}
 
-		public ConcurrentExclusiveSchedulerPair (TaskScheduler taskScheduler)
+		class ConcurrentTaskScheduler : TaskScheduler
 		{
-			throw new NotImplementedException ();
+			ConcurrentExclusiveSchedulerPair scheduler;
+
+			public ConcurrentTaskScheduler (ConcurrentExclusiveSchedulerPair scheduler)
+			{
+				this.scheduler = scheduler;
+			}
+
+			public override int MaximumConcurrencyLevel {
+				get {
+					return scheduler.maxConcurrencyLevel;
+				}
+			}
+
+			protected override void QueueTask (Task t)
+			{
+				scheduler.QueueConcurrent (t);
+			}
+
+			protected override bool TryExecuteTaskInline (Task task, bool taskWasPreviouslyQueued)
+			{
+				if (task.Status != TaskStatus.Created)
+					return false;
+
+				task.RunSynchronously (scheduler.target);
+				return true;
+			}
+
+			public void Execute (Task t)
+			{
+				TryExecuteTask (t);
+			}
+
+			protected override IEnumerable<Task> GetScheduledTasks ()
+			{
+				throw new NotImplementedException ();
+			}
+		}
+
+		public ConcurrentExclusiveSchedulerPair () : this (TaskScheduler.Current)
+		{
+		}
+
+		public ConcurrentExclusiveSchedulerPair (TaskScheduler taskScheduler) : this (taskScheduler, taskScheduler.MaximumConcurrencyLevel)
+		{
 		}
 
 		public ConcurrentExclusiveSchedulerPair (TaskScheduler taskScheduler, int maxConcurrencyLevel)
+			: this (taskScheduler, maxConcurrencyLevel, -1)
 		{
-			throw new NotImplementedException ();
 		}
 
-		public ConcurrentExclusiveSchedulerPair (TaskScheduler taskScheduler, int maxConcurrencyLevel, int maxItemsPerStack)
+		public ConcurrentExclusiveSchedulerPair (TaskScheduler taskScheduler, int maxConcurrencyLevel, int maxItemsPerTask)
 		{
-			throw new NotImplementedException ();
+			this.target = taskScheduler;
+			this.maxConcurrencyLevel = maxConcurrencyLevel;
+			this.maxItemsPerTask = maxItemsPerTask;
+			this.factory = new TaskFactory (taskScheduler);
+			this.taskHandler = InternalTaskProcesser;
+			this.concurrent = new ConcurrentTaskScheduler (this);
+			this.exclusive = new ExclusiveTaskScheduler (this);
 		}
 
 		public void Complete ()
 		{
-			throw new NotImplementedException ();
+			completion.SetResult (null);
 		}
 
 		public TaskScheduler ConcurrentScheduler {
 			get {
-				throw new NotImplementedException ();
+				return concurrent;
 			}
 		}
 
 		public TaskScheduler ExclusiveScheduler {
 			get {
-				throw new NotImplementedException ();
+				return exclusive;
 			}
 		}
 
 		public Task Completion {
 			get {
-				throw new NotImplementedException ();
+				return completion.Task;
 			}
 		}
 
@@ -81,6 +180,78 @@ namespace System.Threading.Tasks
 		protected virtual void Dispose (bool disposing)
 		{
 			throw new NotImplementedException ();
+		}
+
+		void QueueExclusive (Task task)
+		{
+			exclusiveTasks.Enqueue (task);
+			SpinUpTasks ();
+		}
+
+		void QueueConcurrent (Task task)
+		{
+			concurrentTasks.Enqueue (task);
+			SpinUpTasks ();
+		}
+
+		void InternalTaskProcesser ()
+		{
+			Task task;
+			int times = 0;
+			const int lockWaitTime = 2;
+
+			while (!concurrentTasks.IsEmpty || !exclusiveTasks.IsEmpty) {
+				if (maxItemsPerTask != -1 && ++times == maxItemsPerTask)
+					break;
+
+				bool locked = false;
+
+				try {
+					if (!concurrentTasks.IsEmpty && rwl.TryEnterReadLock (lockWaitTime)) {
+						locked = true;
+						while (concurrentTasks.TryDequeue (out task)) {
+							RunTask (task);
+						}
+					}
+				} finally {
+					if (locked) {
+						rwl.ExitReadLock ();
+						locked = false;
+					}
+				}
+
+				try {
+					if (!exclusiveTasks.IsEmpty && rwl.TryEnterWriteLock (lockWaitTime)) {
+						locked = true;
+						while (exclusiveTasks.TryDequeue (out task)) {
+							RunTask (task);
+						}
+					}
+				} finally {
+					if (locked) {
+						rwl.ExitWriteLock ();
+					}
+				}
+			}
+			// TODO: there's a race here, task adding + spinup check may be done while here
+			Interlocked.Decrement (ref numTask);
+		}
+
+		void SpinUpTasks ()
+		{
+			int currentTaskNumber;
+			do {
+				currentTaskNumber = numTask;
+				if (currentTaskNumber >= maxConcurrencyLevel)
+					return;
+			} while (Interlocked.CompareExchange (ref numTask, currentTaskNumber + 1, currentTaskNumber) != currentTaskNumber);
+
+			factory.StartNew (taskHandler);
+		}
+
+		void RunTask (Task task)
+		{
+			concurrent.Execute (task);
 		}
 	}
 }
