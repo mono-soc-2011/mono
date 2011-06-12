@@ -221,7 +221,7 @@ float_sub: dest:f src1:f src2:f len:4
 float_mul: dest:f src1:f src2:f len:4
 float_div: dest:f src1:f src2:f len:4
 float_div_un: dest:f src1:f src2:f len:2
-float_rem: dest:f src1:f src2:f len:17
+float_rem: dest:f src1:f src2:f len:53
 float_rem_un: dest:f src1:f src2:f len:17
 float_neg: dest:f src1:f len:9
 float_not: dest:f src1:f len:2

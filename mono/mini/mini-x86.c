@@ -3803,6 +3803,13 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			break;
 		case OP_FREM: {
 			guint8 *l1, *l2;
+			
+			if (X86_USE_SSE_FP(cfg)) {
+				x86_sse_movsd_membase_reg (code, X86_ESP, -8, ins->sreg1);
+				x86_fld_membase (code, X86_ESP, -8, TRUE);
+				x86_sse_movsd_membase_reg (code, X86_ESP, -8, ins->sreg2);
+				x86_fld_membase (code, X86_ESP, -8, TRUE);
+			}
 
 			x86_push_reg (code, X86_EAX);
 			/* we need to exchange ST(0) with ST(1) */
@@ -3821,6 +3828,11 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 
 			/* pop result */
 			x86_fstp (code, 1);
+			
+			if (X86_USE_SSE_FP(cfg)) {
+				x86_fst_membase (code, X86_ESP, -8, TRUE, TRUE); \
+				x86_sse_movsd_reg_membase (code, ins->dreg, X86_ESP, -8); \
+			}
 
 			x86_pop_reg (code, X86_EAX);
 			break;
