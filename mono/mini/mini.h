@@ -2023,6 +2023,10 @@ gpointer mono_arch_get_seq_point_info           (MonoDomain *domain, guint8 *cod
 void     mono_arch_setup_resume_sighandler_ctx  (MonoContext *ctx, gpointer func) MONO_INTERNAL;
 #endif
 
+#ifdef MONO_ARCH_SUPPORT_COMPILE_INIT
+void      mono_arch_compile_init				(MonoCompile *cfg) MONO_INTERNAL;
+#endif
+
 gboolean
 mono_arch_find_jit_info (MonoDomain *domain, MonoJitTlsData *jit_tls, 
 						 MonoJitInfo *ji, MonoContext *ctx, 

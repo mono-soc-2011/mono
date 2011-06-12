@@ -141,6 +141,8 @@ It's 4 bytes as this is how many bytes + 1 that 'add 0x10, %esp' takes. It is us
 the monitor.enter call and must be already protected.*/
 #define MONO_ARCH_MONITOR_ENTER_ADJUSTMENT 4
 
+#define MONO_ARCH_SUPPORT_COMPILE_INIT
+
 struct MonoLMF {
 	/* 
 	 * If the lowest bit is set to 1, then this is a trampoline LMF frame.

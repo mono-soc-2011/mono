@@ -778,6 +778,18 @@ mono_arch_cpu_init (void)
 }
 
 /*
+ * Initialize the method compiler with any architecture specific settings.
+ */
+void
+mono_arch_compile_init (MonoCompile *cfg)
+{
+	/* enable or disable the use of the FP stack */
+	if (!(cfg->opt & MONO_OPT_SSE2)) {
+		cfg->use_fp_stack = TRUE;
+	}
+}
+
+/*
  * Initialize architecture specific code.
  */
 void
