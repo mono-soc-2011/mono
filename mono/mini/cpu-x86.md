@@ -293,7 +293,7 @@ cos: dest:f src1:f len:26
 abs: dest:f src1:f len:7
 tan: dest:f src1:f len:49
 atan: dest:f src1:f len:8
-sqrt: dest:f src1:f len:26
+sqrt: dest:f src1:f len:4
 round: dest:f src1:f len:2
 bigmul: len:2 dest:l src1:a src2:i
 bigmul_un: len:2 dest:l src1:a src2:i

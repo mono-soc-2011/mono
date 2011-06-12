@@ -3754,10 +3754,10 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			x86_fpatan (code);
 			x86_fldz (code);
 			x86_fp_op_reg (code, X86_FADD, 1, TRUE);
-			break;		
+			break;
 		case OP_SQRT:
 			if (X86_USE_SSE_FP(cfg)) {
-				EMIT_SSE2_FPFUNC(code, fsqrt, ins->dreg, ins->sreg1);
+				x86_sse_sqrtsd_reg_reg (code, ins->dreg, ins->sreg1);
 				break;
 			}
 			x86_fsqrt (code);
