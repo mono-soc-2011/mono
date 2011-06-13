@@ -11,3 +11,4 @@ System.Threading.Tasks.Dataflow/DataflowMessageHeader.cs
 System.Threading.Tasks.Dataflow/DataflowBlockOptions.cs
 System.Threading.Tasks.Dataflow/ITargetBlock.cs
 System.Threading.Tasks.Dataflow/DataflowBlock.cs
+System.Threading.Tasks.Dataflow/CompletionHelper.cs
