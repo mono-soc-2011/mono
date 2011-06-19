@@ -3525,10 +3525,6 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			code = emit_float_to_int (cfg, code, ins->dreg, ins->sreg1, 4, TRUE);
 			break;
 		case OP_FCONV_TO_I8:
-			if (X86_USE_SSE_FP(cfg)) {
-				code = emit_float_to_int (cfg, code, ins->dreg, ins->sreg1, 8, TRUE);
-				break;
-			}
 			x86_alu_reg_imm (code, X86_SUB, X86_ESP, 4);
 			x86_fnstcw_membase(code, X86_ESP, 0);
 			x86_mov_reg_membase (code, ins->dreg, X86_ESP, 0, 2);
@@ -3536,7 +3532,14 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			x86_mov_membase_reg (code, X86_ESP, 2, ins->dreg, 2);
 			x86_fldcw_membase (code, X86_ESP, 2);
 			x86_alu_reg_imm (code, X86_SUB, X86_ESP, 8);
-			x86_fist_pop_membase (code, X86_ESP, 0, TRUE);
+			if (X86_USE_SSE_FP(cfg)) {	/* FIXME: is there a better way to do this? */
+				x86_sse_movsd_membase_reg (code, X86_ESP, 0, ins->sreg1);
+				x86_fld_membase (code, X86_ESP, 0, TRUE);
+				x86_fist_pop_membase (code, X86_ESP, 0, TRUE);
+				x86_sse_movsd_reg_membase (code, ins->dreg, X86_ESP, 0);
+			} else {
+				x86_fist_pop_membase (code, X86_ESP, 0, TRUE);
+			}
 			x86_pop_reg (code, ins->dreg);
 			x86_pop_reg (code, ins->backend.reg3);
 			x86_fldcw_membase (code, X86_ESP, 0);

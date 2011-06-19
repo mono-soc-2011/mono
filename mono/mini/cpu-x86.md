@@ -228,7 +228,7 @@ float_not: dest:f src1:f len:2
 float_conv_to_i1: dest:y src1:f len:39
 float_conv_to_i2: dest:y src1:f len:39
 float_conv_to_i4: dest:i src1:f len:39
-float_conv_to_i8: dest:L src1:f len:39
+float_conv_to_i8: dest:L src1:f len:59
 float_conv_to_u4: dest:i src1:f len:39
 float_conv_to_u8: dest:L src1:f len:39
 float_conv_to_u2: dest:y src1:f len:39
