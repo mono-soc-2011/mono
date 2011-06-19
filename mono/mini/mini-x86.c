@@ -345,7 +345,7 @@ add_valuetype (MonoGenericSharingContext *gsctx, MonoMethodSignature *sig, ArgIn
  * For x86 win32, see ???.
  */
 static CallInfo*
-get_call_info_internal (MonoGenericSharingContext *gsctx, CallInfo *cinfo, MonoMethodSignature *sig)
+get_call_info_internal (MonoGenericSharingContext *gsctx, CallInfo *cinfo, MonoMethodSignature *sig, gboolean use_fp_stack)
 {
 	guint32 i, gr, fr, pstart;
 	MonoType *ret_type;
@@ -386,10 +386,20 @@ get_call_info_internal (MonoGenericSharingContext *gsctx, CallInfo *cinfo, MonoM
 			cinfo->ret.reg = X86_EAX;
 			break;
 		case MONO_TYPE_R4:
-			cinfo->ret.storage = ArgOnFloatFpStack;
+			if (use_fp_stack)
+				cinfo->ret.storage = ArgOnFloatFpStack;
+			else {
+				cinfo->ret.storage = ArgInFloatSSEReg;
+				cinfo->ret.reg = X86_XMM0;
+			}				
 			break;
 		case MONO_TYPE_R8:
-			cinfo->ret.storage = ArgOnDoubleFpStack;
+			if (use_fp_stack)
+				cinfo->ret.storage = ArgOnDoubleFpStack;
+			else {
+				cinfo->ret.storage = ArgInDoubleSSEReg;
+				cinfo->ret.reg = X86_XMM0;
+			}
 			break;
 		case MONO_TYPE_GENERICINST:
 			if (!mono_type_generic_inst_is_valuetype (ret_type)) {
@@ -552,7 +562,7 @@ get_call_info_internal (MonoGenericSharingContext *gsctx, CallInfo *cinfo, MonoM
 }
 
 static CallInfo*
-get_call_info (MonoGenericSharingContext *gsctx, MonoMemPool *mp, MonoMethodSignature *sig)
+get_call_info (MonoGenericSharingContext *gsctx, MonoMemPool *mp, MonoMethodSignature *sig, gboolean use_fp_stack)
 {
 	int n = sig->hasthis + sig->param_count;
 	CallInfo *cinfo;
@@ -562,7 +572,7 @@ get_call_info (MonoGenericSharingContext *gsctx, MonoMemPool *mp, MonoMethodSign
 	else
 		cinfo = g_malloc0 (sizeof (CallInfo) + (sizeof (ArgInfo) * n));
 
-	return get_call_info_internal (gsctx, cinfo, sig);
+	return get_call_info_internal (gsctx, cinfo, sig, use_fp_stack);
 }
 
 /*
@@ -593,7 +603,10 @@ mono_arch_get_argument_info (MonoMethodSignature *csig, int param_count, MonoJit
 	cinfo = (CallInfo*)g_newa (guint8*, len);
 	memset (cinfo, 0, len);
 
-	cinfo = get_call_info_internal (NULL, cinfo, csig);
+	/* we don't actually need the exact parameter information here, so
+	 * don't worry about plumbing use_fp_stack down into this call
+	 */
+	cinfo = get_call_info_internal (NULL, cinfo, csig, TRUE);
 
 	arg_info [0].offset = offset;
 
@@ -653,8 +666,8 @@ mono_x86_tail_call_supported (MonoMethodSignature *caller_sig, MonoMethodSignatu
 	CallInfo *c1, *c2;
 	gboolean res;
 
-	c1 = get_call_info (NULL, NULL, caller_sig);
-	c2 = get_call_info (NULL, NULL, callee_sig);
+	c1 = get_call_info (NULL, NULL, caller_sig, TRUE);
+	c2 = get_call_info (NULL, NULL, callee_sig, TRUE);
 	res = c1->stack_usage >= c2->stack_usage;
 	if (callee_sig->ret && MONO_TYPE_ISSTRUCT (callee_sig->ret) && c2->ret.storage != ArgValuetypeInReg)
 		/* An address on the callee's stack is passed as the first argument */
@@ -1107,7 +1120,7 @@ mono_arch_allocate_vars (MonoCompile *cfg)
 	header = cfg->header;
 	sig = mono_method_signature (cfg->method);
 
-	cinfo = get_call_info (cfg->generic_sharing_context, cfg->mempool, sig);
+	cinfo = get_call_info (cfg->generic_sharing_context, cfg->mempool, sig, cfg->use_fp_stack);
 
 	cfg->frame_reg = X86_EBP;
 	offset = 0;
@@ -1243,7 +1256,7 @@ mono_arch_create_vars (MonoCompile *cfg)
 
 	sig = mono_method_signature (cfg->method);
 
-	cinfo = get_call_info (cfg->generic_sharing_context, cfg->mempool, sig);
+	cinfo = get_call_info (cfg->generic_sharing_context, cfg->mempool, sig, cfg->use_fp_stack);
 
 	if (cinfo->ret.storage == ArgValuetypeInReg)
 		cfg->ret_var_is_local = TRUE;
@@ -1286,7 +1299,7 @@ mono_arch_get_llvm_call_info (MonoCompile *cfg, MonoMethodSignature *sig)
 
 	n = sig->param_count + sig->hasthis;
 
-	cinfo = get_call_info (cfg->generic_sharing_context, cfg->mempool, sig);
+	cinfo = get_call_info (cfg->generic_sharing_context, cfg->mempool, sig, cfg->use_fp_stack);
 
 	linfo = mono_mempool_alloc0 (cfg->mempool, sizeof (LLVMCallInfo) + (sizeof (LLVMArgInfo) * n));
 
@@ -1397,7 +1410,7 @@ mono_arch_emit_call (MonoCompile *cfg, MonoCallInst *call)
 	sig = call->signature;
 	n = sig->param_count + sig->hasthis;
 
-	cinfo = get_call_info (cfg->generic_sharing_context, cfg->mempool, sig);
+	cinfo = get_call_info (cfg->generic_sharing_context, cfg->mempool, sig, cfg->use_fp_stack);
 
 	if (!sig->pinvoke && (sig->call_convention == MONO_CALL_VARARG))
 		sentinelpos = sig->sentinelpos + (sig->hasthis ? 1 : 0);
@@ -2290,7 +2303,7 @@ emit_load_volatile_arguments (MonoCompile *cfg, guint8 *code)
 
 	sig = mono_method_signature (method);
 
-	cinfo = get_call_info (cfg->generic_sharing_context, cfg->mempool, sig);
+	cinfo = get_call_info (cfg->generic_sharing_context, cfg->mempool, sig, cfg->use_fp_stack);
 	
 	/* This is the opposite of the code in emit_prolog */
 
@@ -5510,7 +5523,7 @@ mono_arch_emit_epilog (MonoCompile *cfg)
 	}
 
 	/* Load returned vtypes into registers if needed */
-	cinfo = get_call_info (cfg->generic_sharing_context, cfg->mempool, sig);
+	cinfo = get_call_info (cfg->generic_sharing_context, cfg->mempool, sig, cfg->use_fp_stack);
 	if (cinfo->ret.storage == ArgValuetypeInReg) {
 		for (quad = 0; quad < 2; quad ++) {
 			switch (cinfo->ret.pair_storage [quad]) {
