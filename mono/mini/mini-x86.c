@@ -3567,7 +3567,7 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			x86_fst_membase (code, X86_ESP, 0, FALSE, TRUE);
 			
 			if (X86_USE_SSE_FP(cfg)) {
-				x86_sse_movss_reg_membase(code, ins->dreg, X86_ESP, 0);
+				x86_sse_cvtss2sd_reg_membase (code, ins->dreg, X86_ESP, 0);
 			} else {
 				x86_fld_membase (code, X86_ESP, 0, FALSE);
 			}
