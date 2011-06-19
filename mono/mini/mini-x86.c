@@ -6290,6 +6290,10 @@ mono_arch_decompose_opts (MonoCompile *cfg, MonoInst *ins)
 {
 	MonoInst *fconv;
 	int dreg, src_opcode;
+	
+	/* when using SSE fp we don't need these extra ops for float conversions */
+	if (X86_USE_SSE_FP(cfg))
+		return;
 
 	if (!(cfg->opt & MONO_OPT_SSE2) || !(cfg->opt & MONO_OPT_SIMD) || COMPILE_LLVM (cfg))
 		return;
