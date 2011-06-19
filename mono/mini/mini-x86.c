@@ -4740,12 +4740,42 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			break;
 
 		case OP_INSERTX_R4_SLOW:
+			if (X86_USE_SSE_FP(cfg)) {
+				switch (ins->inst_c0) {
+				case 0:
+					x86_sse_cvtsd2ss_reg_reg (code, ins->dreg, ins->sreg2);
+					break;
+				case 1:
+					x86_sse_pshufd_reg_reg_imm (code, ins->dreg, ins->dreg, mono_simd_shuffle_mask(1, 0, 2, 3));
+					x86_sse_cvtsd2ss_reg_reg (code, ins->dreg, ins->sreg2);
+					x86_sse_pshufd_reg_reg_imm (code, ins->dreg, ins->dreg, mono_simd_shuffle_mask(1, 0, 2, 3));
+					break;
+				case 2:
+					x86_sse_pshufd_reg_reg_imm (code, ins->dreg, ins->dreg, mono_simd_shuffle_mask(2, 1, 0, 3));
+					x86_sse_cvtsd2ss_reg_reg (code, ins->dreg, ins->sreg2);
+					x86_sse_pshufd_reg_reg_imm (code, ins->dreg, ins->dreg, mono_simd_shuffle_mask(2, 1, 0, 3));
+					break;
+				case 3:
+					x86_sse_pshufd_reg_reg_imm (code, ins->dreg, ins->dreg, mono_simd_shuffle_mask(3, 1, 2, 0));
+					x86_sse_cvtsd2ss_reg_reg (code, ins->dreg, ins->sreg2);
+					x86_sse_pshufd_reg_reg_imm (code, ins->dreg, ins->dreg, mono_simd_shuffle_mask(3, 1, 2, 0));
+					break;
+				}
+				break;
+			}
 			x86_fst_membase (code, ins->backend.spill_var->inst_basereg, ins->backend.spill_var->inst_offset, FALSE, TRUE);
 			/*TODO if inst_c0 == 0 use movss*/
 			x86_sse_alu_pd_reg_membase_imm (code, X86_SSE_PINSRW, ins->dreg, ins->backend.spill_var->inst_basereg, ins->backend.spill_var->inst_offset + 0, ins->inst_c0 * 2);
 			x86_sse_alu_pd_reg_membase_imm (code, X86_SSE_PINSRW, ins->dreg, ins->backend.spill_var->inst_basereg, ins->backend.spill_var->inst_offset + 2, ins->inst_c0 * 2 + 1);
 			break;
 		case OP_INSERTX_R8_SLOW:
+			if (X86_USE_SSE_FP(cfg)) {
+				if (ins->inst_c0)
+					x86_sse_movlhps_reg_reg (code, ins->dreg, ins->sreg2);
+				else
+					x86_sse_movsd_reg_reg (code, ins->dreg, ins->sreg2);
+				break;
+			}
 			x86_fst_membase (code, ins->backend.spill_var->inst_basereg, ins->backend.spill_var->inst_offset, TRUE, TRUE);
 			if (cfg->verbose_level)
 				printf ("CONVERTING a OP_INSERTX_R8_SLOW %d offset %x\n", ins->inst_c0, offset);
@@ -4784,13 +4814,22 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			x86_sse_alu_pd_reg_reg (code, X86_SSE_PXOR, ins->dreg, ins->dreg);
 			break;
 		case OP_ICONV_TO_R8_RAW:
-			x86_mov_membase_reg (code, ins->backend.spill_var->inst_basereg, ins->backend.spill_var->inst_offset, ins->sreg1, 4);
-			x86_fld_membase (code, ins->backend.spill_var->inst_basereg, ins->backend.spill_var->inst_offset, FALSE);
+			if (X86_USE_SSE_FP(cfg)) {
+				x86_sse_movd_xreg_reg (code, ins->dreg, ins->sreg1);
+				x86_sse_cvtss2sd_reg_reg (code, ins->dreg, ins->dreg);
+			} else {
+				x86_mov_membase_reg (code, ins->backend.spill_var->inst_basereg, ins->backend.spill_var->inst_offset, ins->sreg1, 4);
+				x86_fld_membase (code, ins->backend.spill_var->inst_basereg, ins->backend.spill_var->inst_offset, FALSE);
+			}
 			break;
 
 		case OP_FCONV_TO_R8_X:
-			x86_fst_membase (code, ins->backend.spill_var->inst_basereg, ins->backend.spill_var->inst_offset, TRUE, TRUE);
-			x86_sse_movsd_reg_membase (code, ins->dreg, ins->backend.spill_var->inst_basereg, ins->backend.spill_var->inst_offset);
+			if (X86_USE_SSE_FP(cfg)) {
+				x86_sse_movsd_reg_reg (code, ins->dreg, ins->sreg1);
+			} else {
+				x86_fst_membase (code, ins->backend.spill_var->inst_basereg, ins->backend.spill_var->inst_offset, TRUE, TRUE);
+				x86_sse_movsd_reg_membase (code, ins->dreg, ins->backend.spill_var->inst_basereg, ins->backend.spill_var->inst_offset);
+			}
 			break;
 
 		case OP_XCONV_R8_TO_I4:
@@ -4829,14 +4868,25 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			x86_sse_shift_reg_imm (code, X86_SSE_PSHUFD, ins->dreg, ins->dreg, 0);
 			break;
 		case OP_EXPAND_R4:
-			x86_fst_membase (code, ins->backend.spill_var->inst_basereg, ins->backend.spill_var->inst_offset, FALSE, TRUE);
-			x86_movd_xreg_membase (code, ins->dreg, ins->backend.spill_var->inst_basereg, ins->backend.spill_var->inst_offset);
-			x86_sse_shift_reg_imm (code, X86_SSE_PSHUFD, ins->dreg, ins->dreg, 0);
+			if (X86_USE_SSE_FP(cfg)) {
+				x86_sse_movsd_reg_reg (code, ins->dreg, ins->sreg1);
+				x86_sse_cvtsd2ss_reg_reg (code, ins->dreg, ins->dreg);
+				x86_sse_pshufd_reg_reg_imm (code, ins->dreg, ins->dreg, 0);
+			} else {
+				x86_fst_membase (code, ins->backend.spill_var->inst_basereg, ins->backend.spill_var->inst_offset, FALSE, TRUE);
+				x86_movd_xreg_membase (code, ins->dreg, ins->backend.spill_var->inst_basereg, ins->backend.spill_var->inst_offset);
+				x86_sse_shift_reg_imm (code, X86_SSE_PSHUFD, ins->dreg, ins->dreg, 0);
+			}
 			break;
 		case OP_EXPAND_R8:
-			x86_fst_membase (code, ins->backend.spill_var->inst_basereg, ins->backend.spill_var->inst_offset, TRUE, TRUE);
-			x86_sse_movsd_reg_membase (code, ins->dreg, ins->backend.spill_var->inst_basereg, ins->backend.spill_var->inst_offset);
-			x86_sse_shift_reg_imm (code, X86_SSE_PSHUFD, ins->dreg, ins->dreg, 0x44);
+			if (X86_USE_SSE_FP(cfg)) {
+				x86_sse_movsd_reg_reg (code, ins->dreg, ins->sreg1);
+				x86_sse_pshufd_reg_reg_imm (code, ins->dreg, ins->dreg, 0x44);
+			} else {
+				x86_fst_membase (code, ins->backend.spill_var->inst_basereg, ins->backend.spill_var->inst_offset, TRUE, TRUE);
+				x86_sse_movsd_reg_membase (code, ins->dreg, ins->backend.spill_var->inst_basereg, ins->backend.spill_var->inst_offset);
+				x86_sse_shift_reg_imm (code, X86_SSE_PSHUFD, ins->dreg, ins->dreg, 0x44);
+			}
 			break;
 
 		case OP_CVTDQ2PD:

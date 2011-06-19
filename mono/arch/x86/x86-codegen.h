@@ -2403,6 +2403,14 @@ typedef enum {
 		x86_reg_emit ((inst), (dreg), (reg));	\
 	} while (0)
 	
+#define emit_sse_reg_reg_op2(inst,dreg,reg,op1,op2) \
+	do { \
+		x86_codegen_pre(&(inst), 3); \
+		*(inst)++ = (unsigned char)(op1); \
+		*(inst)++ = (unsigned char)(op2); \
+		x86_reg_emit ((inst), (dreg), (reg)); \
+	} while (0)
+	
 #define emit_sse_reg_mem(inst,dreg,mem,op1,op2,op3) \
 	do {	\
 		x86_codegen_pre(&(inst), 4); \
@@ -2428,6 +2436,16 @@ typedef enum {
 		*(inst)++ = (unsigned char)(op2);   \
 		*(inst)++ = (unsigned char)(op3);   \
 		x86_membase_emit ((inst), (reg), (basereg), (disp));	\
+	} while (0)
+
+#define emit_sse_reg_reg_imm(inst,dreg,reg,op1,op2,op3,imm) \
+	do { \
+	   	x86_codegen_pre(&(inst), 5);	\
+	   	*(inst)++ = (unsigned char)(op1);	\
+		*(inst)++ = (unsigned char)(op2);	\
+		*(inst)++ = (unsigned char)(op3);	\
+		x86_reg_emit ((inst), (dreg), (reg));	\
+	   	x86_imm_emit8 ((inst), (imm));	\
 	} while (0)
 
 /* SSE opcodes */
@@ -2474,6 +2492,12 @@ typedef enum {
 #define x86_sse_divsd_reg_reg(inst,dreg,reg) emit_sse_reg_reg ((inst), (dreg), (reg), 0xf2, 0x0f, 0x5e)
 
 #define x86_sse_sqrtsd_reg_reg(inst,dreg,reg) emit_sse_reg_reg((inst), (dreg), (reg), 0xf2, 0x0f, 0x51)
+
+#define x86_sse_pshufd_reg_reg_imm(inst,dreg,reg,imm) emit_sse_reg_reg_imm((inst), (dreg), (reg), 0x66, 0x0f, 0x70, (imm))
+
+#define x86_sse_movlhps_reg_reg(inst,dreg,sreg) emit_sse_reg_reg_op2((inst), (dreg), (sreg), 0x0f, 0x16)
+
+#define x86_sse_movd_xreg_reg(inst,dreg,sreg) emit_sse_reg_reg((inst), (dreg), (sreg), 0x66, 0x0f, 0x6e)
 
 #define x86_sse_alu_reg_reg(inst,opc,dreg,reg)	\
 	do {	\
