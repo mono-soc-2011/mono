@@ -1203,6 +1203,8 @@ mono_arch_allocate_vars (MonoCompile *cfg)
 	case ArgValuetypeInReg:
 		break;
 	case ArgInIReg:
+	case ArgInFloatSSEReg:
+	case ArgInDoubleSSEReg:
 		cfg->ret->opcode = OP_REGVAR;
 		cfg->ret->inst_c0 = cinfo->ret.reg;
 		cfg->ret->dreg = cinfo->ret.reg;
@@ -5520,6 +5522,12 @@ mono_arch_emit_epilog (MonoCompile *cfg)
 				break;
 			case ArgOnDoubleFpStack:
 				x86_fld_membase (code, cfg->ret->inst_basereg, cfg->ret->inst_offset + (quad * sizeof (gpointer)), TRUE);
+				break;
+			case ArgInFloatSSEReg:
+				x86_sse_movss_reg_membase (code, cinfo->ret.pair_regs [quad], cfg->ret->inst_basereg, cfg->ret->inst_offset + (quad * sizeof(gpointer)));
+				break;
+			case ArgInDoubleSSEReg:
+				x86_sse_movsd_reg_membase (code, cinfo->ret.pair_regs [quad], cfg->ret->inst_basereg, cfg->ret->inst_offset + (quad * sizeof(gpointer)));
 				break;
 			case ArgNone:
 				break;
