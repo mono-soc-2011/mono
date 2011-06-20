@@ -45,7 +45,7 @@ namespace System.Threading.Tasks.Dataflow
 
 		public ActionBlock (Action<TInput> action) : this (action, defaultOptions)
 		{
-
+			
 		}
 
 		public ActionBlock (Action<TInput> action, ExecutionDataflowBlockOptions dataflowBlockOptions)
@@ -57,12 +57,12 @@ namespace System.Threading.Tasks.Dataflow
 
 		public ActionBlock (Func<TInput, Task> action) : this (action, defaultOptions)
 		{
-
+			throw new NotImplementedException ();
 		}
 
 		public ActionBlock (Func<TInput, Task> action, ExecutionDataflowBlockOptions dataflowBlockOptions)
 		{
-			this.dataflowBlockOptions = dataflowBlockOptions;
+			throw new NotImplementedException ();
 		}
 
 		public DataflowMessageStatus OfferMessage (DataflowMessageHeader messageHeader,
