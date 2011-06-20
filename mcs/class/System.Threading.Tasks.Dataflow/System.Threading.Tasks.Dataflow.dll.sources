@@ -15,3 +15,7 @@ System.Threading.Tasks.Dataflow/CompletionHelper.cs
 System.Threading.Tasks.Dataflow/ActionBlock.cs
 System.Threading.Tasks.Dataflow/ExecutionDataflowBlockOptions.cs
 System.Threading.Tasks.Dataflow/AtomicBoolean.cs
+System.Threading.Tasks.Dataflow/MessageBox.cs
+System.Threading.Tasks.Dataflow/ExecutingMessageBox.cs
+System.Threading.Tasks.Dataflow/TargetBuffer.cs
+System.Threading.Tasks.Dataflow/PassingMessageBox.cs
