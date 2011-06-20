@@ -2195,6 +2195,17 @@ mono_emit_stack_alloc (guchar *code, MonoInst* tree)
 static guint8*
 emit_move_return_value (MonoCompile *cfg, MonoInst *ins, guint8 *code)
 {
+	if (cfg->method->wrapper_type == MONO_WRAPPER_MANAGED_TO_NATIVE && X86_USE_SSE_FP(cfg)) {
+		switch (ins->opcode) {
+		case OP_FCALL:
+		case OP_FCALL_REG:
+		case OP_FCALL_MEMBASE:
+			x86_fst_membase (code, X86_ESP, -8, TRUE, TRUE);
+			x86_sse_movsd_reg_membase (code, ins->dreg, X86_ESP, -8);
+			break;
+		}
+	}
+
 	/* Move return value to the target register */
 	switch (ins->opcode) {
 	case OP_CALL:

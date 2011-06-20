@@ -137,7 +137,7 @@ voidcall: len:17 clob:c
 voidcall_reg: src1:i len:11 clob:c
 voidcall_membase: src1:b len:16 nacl:17 clob:c
 fcall: dest:f len:17 clob:c
-fcall_reg: dest:f src1:i len:11 clob:c
+fcall_reg: dest:f src1:i len:15 clob:c
 fcall_membase: dest:f src1:b len:16 nacl:17 clob:c
 lcall: dest:l len:17 clob:c
 lcall_reg: dest:l src1:i len:11 clob:c
