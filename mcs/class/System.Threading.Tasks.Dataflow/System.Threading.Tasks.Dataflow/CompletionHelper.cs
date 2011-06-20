@@ -51,7 +51,7 @@ namespace System.Threading.Tasks.Dataflow
 
 		public void Complete ()
 		{
-			source.SetResult (null);
+			source.TrySetResult (null);
 		}
 
 		public void Fault (Exception ex)

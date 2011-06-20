@@ -72,7 +72,13 @@ namespace System.Threading.Tasks.Dataflow
 		{
 			if (!messageHeader.IsValid)
 				return DataflowMessageStatus.Declined;
-			messageQueue.Add (messageValue);
+			try {
+				messageQueue.Add (messageValue);
+			} catch (InvalidOperationException e) {
+				// This is triggered either if the underlying collection didn't accept the item
+				// or if the messageQueue has been marked complete, either way it corresponds to a false
+				return DataflowMessageStatus.DecliningPermanently;
+			}
 			EnsureProcessing ();
 			return DataflowMessageStatus.Accepted;
 		}
@@ -90,6 +96,8 @@ namespace System.Threading.Tasks.Dataflow
 					// Re-run ourselves in case of a race when data is available in the end
 					if (messageQueue.Count > 0)
 						EnsureProcessing ();
+					else if (messageQueue.IsCompleted)
+						compHelper.Complete ();
 				});
 		}
 
@@ -102,7 +110,10 @@ namespace System.Threading.Tasks.Dataflow
 
 		public void Complete ()
 		{
-			compHelper.Complete ();
+			// Make message queue complete
+			messageQueue.CompleteAdding ();
+			if (messageQueue.IsCompleted)
+				compHelper.Complete ();
 		}
 
 		public void Fault (Exception ex)

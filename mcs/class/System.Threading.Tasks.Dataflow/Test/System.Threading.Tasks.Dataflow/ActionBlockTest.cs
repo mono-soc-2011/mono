@@ -46,9 +46,26 @@ namespace MonoTests.System.Threading.Tasks.Dataflow
 
 			for (int i = 0; i < array.Length; ++i)
 				Assert.IsTrue (block.Post (i), "Not accepted");
+
+			// TODO: use a more sensible approach here based on Completion
+			Thread.Sleep (1300);
 			
-			Thread.Sleep (300);
 			Assert.IsTrue (array.All (b => b), "Some false");
+		}
+
+		[Test]
+		public void CompleteTest ()
+		{
+			ActionBlock<int> block = new ActionBlock<int> ((i) => Thread.Sleep (100));
+
+			for (int i = 0; i < 10; i++)
+				Assert.IsTrue (block.Post (i), "Not Accepted");
+
+			block.Complete ();
+			// Still element to be processed so Completion should be false
+			Assert.IsFalse (block.Completion.IsCompleted);
+			block.Completion.Wait ();
+			Assert.IsTrue (block.Completion.IsCompleted);
 		}
 	}
 }
