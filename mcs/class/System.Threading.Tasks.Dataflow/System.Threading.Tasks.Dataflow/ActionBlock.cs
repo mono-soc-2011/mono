@@ -36,12 +36,12 @@ namespace System.Threading.Tasks.Dataflow
 		static readonly ExecutionDataflowBlockOptions defaultOptions = new ExecutionDataflowBlockOptions ();
 
 		CompletionHelper compHelper = CompletionHelper.GetNew ();
+		BlockingCollection<TInput> messageQueue = new BlockingCollection<TInput> ();
+		ExecutingMessageBox<TInput> messageBox;
 		Action<TInput> action;
 		ExecutionDataflowBlockOptions dataflowBlockOptions;
-		// TODO: take care of options
-		BlockingCollection<TInput> messageQueue = new BlockingCollection<TInput> ();
-		AtomicBoolean started = new AtomicBoolean ();
-		Action processQueue;
+
+		readonly Action processQueue;
 
 		public ActionBlock (Action<TInput> action) : this (action, defaultOptions)
 		{
@@ -50,9 +50,15 @@ namespace System.Threading.Tasks.Dataflow
 
 		public ActionBlock (Action<TInput> action, ExecutionDataflowBlockOptions dataflowBlockOptions)
 		{
+			if (action == null)
+				throw new ArgumentNullException ("action");
+			if (dataflowBlockOptions == null)
+				throw new ArgumentNullException ("dataflowBlockOptions");
+
 			this.action = action;
 			this.dataflowBlockOptions = dataflowBlockOptions;
 			this.processQueue = ProcessQueue;
+			this.messageBox = new ExecutingMessageBox<TInput> (messageQueue, compHelper, processQueue, dataflowBlockOptions);
 		}
 
 		public ActionBlock (Func<TInput, Task> action) : this (action, defaultOptions)
@@ -70,35 +76,7 @@ namespace System.Threading.Tasks.Dataflow
 		                                           ISourceBlock<TInput> source,
 		                                           bool consumeToAccept)
 		{
-			if (!messageHeader.IsValid)
-				return DataflowMessageStatus.Declined;
-			try {
-				messageQueue.Add (messageValue);
-			} catch (InvalidOperationException e) {
-				// This is triggered either if the underlying collection didn't accept the item
-				// or if the messageQueue has been marked complete, either way it corresponds to a false
-				return DataflowMessageStatus.DecliningPermanently;
-			}
-			EnsureProcessing ();
-			return DataflowMessageStatus.Accepted;
-		}
-
-		void EnsureProcessing ()
-		{
-			if (!started.TryRelaxedSet ())
-				return;
-
-			Task[] tasks = new Task[dataflowBlockOptions.MaxDegreeOfParallelism];
-			for (int i = 0; i < tasks.Length; ++i)
-				tasks[i] = Task.Factory.StartNew (processQueue);
-			Task.Factory.ContinueWhenAll (tasks, (_) => {
-					started.Value = false;
-					// Re-run ourselves in case of a race when data is available in the end
-					if (messageQueue.Count > 0)
-						EnsureProcessing ();
-					else if (messageQueue.IsCompleted)
-						compHelper.Complete ();
-				});
+			return messageBox.OfferMessage (messageHeader, messageValue, source, consumeToAccept);
 		}
 
 		void ProcessQueue ()
@@ -110,10 +88,7 @@ namespace System.Threading.Tasks.Dataflow
 
 		public void Complete ()
 		{
-			// Make message queue complete
-			messageQueue.CompleteAdding ();
-			if (messageQueue.IsCompleted)
-				compHelper.Complete ();
+			messageBox.Complete ();
 		}
 
 		public void Fault (Exception ex)
