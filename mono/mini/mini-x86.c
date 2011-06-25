@@ -800,6 +800,13 @@ mono_arch_compile_init (MonoCompile *cfg)
 	if (!(cfg->opt & MONO_OPT_SSE2)) {
 		cfg->use_fp_stack = TRUE;
 	}
+	
+#ifdef MONO_ARCH_NEED_SIMD_BANK
+	/* if we are using SSE for FP, enable a shared SIMD/FP bank */
+	if (X86_USE_SSE_FP(cfg)) {
+		cfg->rs->use_shared_fp_simd_bank = TRUE;
+	}
+#endif
 }
 
 /*

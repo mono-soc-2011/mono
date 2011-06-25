@@ -1277,6 +1277,17 @@ mono_arch_cpu_init (void)
 }
 
 /*
+ * Initialize the method compiler with any architecture specific settings.
+ */
+void
+mono_arch_compile_init (MonoCompile *cfg)
+{
+#ifdef MONO_ARCH_NEED_SIMD_BANK
+	cfg->rs->use_shared_fp_simd_bank = TRUE;
+#endif
+}
+
+/*
  * Initialize architecture specific code.
  */
 void

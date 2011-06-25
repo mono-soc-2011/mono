@@ -4227,10 +4227,6 @@ mini_method_compile (MonoMethod *method, guint32 opts, MonoDomain *domain, gbool
 			MONO_PROBE_METHOD_COMPILE_END (method, FALSE);
 		return cfg;
 	}
-	
-#ifdef MONO_ARCH_SUPPORT_COMPILE_INIT
-	mono_arch_compile_init (cfg);
-#endif
 
 #ifdef ENABLE_LLVM
 	{
@@ -4408,6 +4404,11 @@ mini_method_compile (MonoMethod *method, guint32 opts, MonoDomain *domain, gbool
 	 * created by this.
 	 */
 	//cfg->enable_extended_bblocks = TRUE;
+	
+	/* after we're all done setting up, do arch-specific initialization */
+#ifdef MONO_ARCH_SUPPORT_COMPILE_INIT
+	mono_arch_compile_init (cfg);
+#endif
 
 	/*We must verify the method before doing any IR generation as mono_compile_create_vars can assert.*/
 	if (mono_compile_is_broken (cfg, cfg->method, TRUE)) {

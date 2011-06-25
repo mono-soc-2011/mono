@@ -28,36 +28,37 @@
 #define MONO_ARCH_CALLEE_XREGS 0
 
 #endif
- 
 
 #define MONO_ARCH_BANK_MIRRORED -2
 
-#ifdef MONO_ARCH_USE_SHARED_FP_SIMD_BANK
+#ifdef MONO_ARCH_NEED_SIMD_BANK
 
-#ifndef MONO_ARCH_NEED_SIMD_BANK
-#error "MONO_ARCH_USE_SHARED_FP_SIMD_BANK needs MONO_ARCH_NEED_SIMD_BANK to work"
-#endif
+/* if we need an SIMD bank, we may or may not need to mirror */
+static inline int get_mirrored_bank (MonoRegState *rs, int bank) {
+	if (rs->use_shared_fp_simd_bank)
+		return (bank == MONO_REG_SIMD) ? MONO_REG_DOUBLE : ((bank == MONO_REG_DOUBLE) ? MONO_REG_SIMD : -1);
+	return -1;
+}
 
-#define get_mirrored_bank(bank) (((bank) == MONO_REG_SIMD ) ? MONO_REG_DOUBLE : (((bank) == MONO_REG_DOUBLE ) ? MONO_REG_SIMD : -1))
-
-#define is_hreg_mirrored(rs, bank, hreg) ((rs)->symbolic [(bank)] [(hreg)] == MONO_ARCH_BANK_MIRRORED)
-
+static inline int is_hreg_mirrored (MonoRegState *rs, int bank, int hreg) {
+	if (rs->use_shared_fp_simd_bank)
+		return rs->symbolic[bank][hreg] == MONO_ARCH_BANK_MIRRORED;
+	return 0;
+}
 
 #else
 
-
-#define get_mirrored_bank(bank) (-1)
-
+/* otherwise no mirroring */
+#define get_mirrored_bank(rs, bank) (-1)
 #define is_hreg_mirrored(rs, bank, hreg) (0)
 
 #endif
-
 
 /* If the bank is mirrored return the true logical bank that the register in the
  * physical register bank is allocated to.
  */
 static inline int translate_bank (MonoRegState *rs, int bank, int hreg) {
-	return is_hreg_mirrored (rs, bank, hreg) ? get_mirrored_bank (bank) : bank;
+	return is_hreg_mirrored (rs, bank, hreg) ? get_mirrored_bank (rs, bank) : bank;
 }
 
 /*
@@ -130,13 +131,15 @@ static const int regbank_spill_var_size[] = {
 static inline void
 mono_regstate_assign (MonoRegState *rs)
 {
-#ifdef MONO_ARCH_USE_SHARED_FP_SIMD_BANK
+#ifdef MONO_ARCH_NEED_SIMD_BANK
 	/* The regalloc may fail if fp and simd logical regbanks share the same physical reg bank and
 	 * if the values here are not the same.
 	 */
-	g_assert(regbank_callee_regs [MONO_REG_SIMD] == regbank_callee_regs [MONO_REG_DOUBLE]);
-	g_assert(regbank_callee_saved_regs [MONO_REG_SIMD] == regbank_callee_saved_regs [MONO_REG_DOUBLE]);
-	g_assert(regbank_size [MONO_REG_SIMD] == regbank_size [MONO_REG_DOUBLE]);
+	if (rs->use_shared_fp_simd_bank) {
+		g_assert(regbank_callee_regs [MONO_REG_SIMD] == regbank_callee_regs [MONO_REG_DOUBLE]);
+		g_assert(regbank_callee_saved_regs [MONO_REG_SIMD] == regbank_callee_saved_regs [MONO_REG_DOUBLE]);
+		g_assert(regbank_size [MONO_REG_SIMD] == regbank_size [MONO_REG_DOUBLE]);
+	}
 #endif
 
 	if (rs->next_vreg > rs->vassign_size) {
@@ -207,7 +210,7 @@ mono_regstate_alloc_general (MonoRegState *rs, regmask_t allow, int bank)
 		if (mask & ((regmask_t)1 << i)) {
 			rs->free_mask [bank] &= ~ ((regmask_t)1 << i);
 
-			mirrored_bank = get_mirrored_bank (bank);
+			mirrored_bank = get_mirrored_bank (rs, bank);
 			if (mirrored_bank == -1)
 				return i;
 
@@ -227,7 +230,7 @@ mono_regstate_free_general (MonoRegState *rs, int reg, int bank)
 		rs->free_mask [bank] |= (regmask_t)1 << reg;
 		rs->symbolic [bank][reg] = 0;
 
-		mirrored_bank = get_mirrored_bank (bank);
+		mirrored_bank = get_mirrored_bank (rs, bank);
 		if (mirrored_bank == -1)
 			return;
 		rs->free_mask [mirrored_bank] = rs->free_mask [bank];
@@ -989,7 +992,7 @@ assign_reg (MonoCompile *cfg, MonoRegState *rs, int reg, int hreg, int bank)
 		rs->symbolic [bank] [hreg] = reg;
 		rs->free_mask [bank] &= ~ (regmask (hreg));
 
-		mirrored_bank = get_mirrored_bank (bank);
+		mirrored_bank = get_mirrored_bank (rs, bank);
 		if (mirrored_bank == -1)
 			return;
 

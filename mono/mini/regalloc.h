@@ -42,6 +42,9 @@ typedef struct {
 	int *symbolic [MONO_NUM_REGBANKS];
 
 	int vassign_size;
+	
+	/* enables the use of a shared SIMD / FP bank */
+	guint32 use_shared_fp_simd_bank;
 } MonoRegState;
 
 MonoRegState* mono_regstate_new (void) MONO_INTERNAL;
