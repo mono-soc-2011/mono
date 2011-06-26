@@ -1596,12 +1596,12 @@ mono_arch_emit_setret (MonoCompile *cfg, MonoMethod *method, MonoInst *val)
 
 	if (!ret->byref) {
 		if (ret->type == MONO_TYPE_R4) {
-			if (COMPILE_LLVM (cfg))
+			if (COMPILE_LLVM (cfg) || X86_USE_SSE_FP(cfg))
 				MONO_EMIT_NEW_UNALU (cfg, OP_FMOVE, cfg->ret->dreg, val->dreg);
 			/* Nothing to do */
 			return;
 		} else if (ret->type == MONO_TYPE_R8) {
-			if (COMPILE_LLVM (cfg))
+			if (COMPILE_LLVM (cfg) || X86_USE_SSE_FP(cfg))
 				MONO_EMIT_NEW_UNALU (cfg, OP_FMOVE, cfg->ret->dreg, val->dreg);
 			/* Nothing to do */
 			return;
@@ -2202,17 +2202,6 @@ mono_emit_stack_alloc (guchar *code, MonoInst* tree)
 static guint8*
 emit_move_return_value (MonoCompile *cfg, MonoInst *ins, guint8 *code)
 {
-	if (cfg->method->wrapper_type == MONO_WRAPPER_MANAGED_TO_NATIVE && X86_USE_SSE_FP(cfg)) {
-		switch (ins->opcode) {
-		case OP_FCALL:
-		case OP_FCALL_REG:
-		case OP_FCALL_MEMBASE:
-			x86_fst_membase (code, X86_ESP, -8, TRUE, TRUE);
-			x86_sse_movsd_reg_membase (code, ins->dreg, X86_ESP, -8);
-			break;
-		}
-	}
-
 	/* Move return value to the target register */
 	switch (ins->opcode) {
 	case OP_CALL:
@@ -2221,6 +2210,17 @@ emit_move_return_value (MonoCompile *cfg, MonoInst *ins, guint8 *code)
 		if (ins->dreg != X86_EAX)
 			x86_mov_reg_reg (code, ins->dreg, X86_EAX, 4);
 		break;
+	case OP_FCALL:
+	case OP_FCALL_REG:
+	case OP_FCALL_MEMBASE:
+		if (X86_USE_SSE_FP(cfg)) {
+			if (cfg->method->wrapper_type == MONO_WRAPPER_MANAGED_TO_NATIVE) {
+				x86_fst_membase (code, X86_ESP, -8, TRUE, TRUE);
+				x86_sse_movsd_reg_membase (code, ins->dreg, X86_ESP, -8);
+			} else if (ins->dreg != X86_XMM0) {
+				x86_sse_movsd_reg_reg (code, ins->dreg, X86_XMM0);
+			}
+		}
 	default:
 		break;
 	}
