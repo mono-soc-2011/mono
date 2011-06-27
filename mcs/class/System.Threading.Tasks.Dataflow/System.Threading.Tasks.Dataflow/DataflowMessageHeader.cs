@@ -51,6 +51,11 @@ namespace System.Threading.Tasks.Dataflow
 			}
 		}
 
+		internal DataflowMessageHeader Increment ()
+		{
+			return new DataflowMessageHeader (Interlocked.Increment (ref id));
+		}
+
 		public override bool Equals (object obj)
 		{
 			return obj is DataflowMessageHeader ? Equals ((DataflowMessageHeader)obj) : false;
