@@ -1,4 +1,5 @@
 System.Threading.Tasks.Dataflow/ActionBlockTest.cs
+System.Threading.Tasks.Dataflow/BufferBlockTest.cs
 System.Threading.Tasks.Dataflow/CompletionHelperTest.cs
 ../System.Threading.Tasks.Dataflow/CompletionHelper.cs
 System.Threading.Tasks/ConcurrentExclusiveSchedulerPairTest.cs

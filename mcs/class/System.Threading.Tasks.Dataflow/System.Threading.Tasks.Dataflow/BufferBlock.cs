@@ -27,6 +27,7 @@
 using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace System.Threading.Tasks.Dataflow
 {
@@ -35,12 +36,12 @@ namespace System.Threading.Tasks.Dataflow
 		static readonly DataflowBlockOptions defaultOptions = new DataflowBlockOptions ();
 
 		CompletionHelper compHelper = CompletionHelper.GetNew ();
-		BlockingCollection<TInput> messageQueue = new BlockingCollection<TInput> ();
-		MessageBox<TInput> messageBox;
+		BlockingCollection<T> messageQueue = new BlockingCollection<T> ();
+		MessageBox<T> messageBox;
 		DataflowBlockOptions dataflowBlockOptions;
 
 		// With each call to LinkTo, targets get added and when the current one is disposed, the next in line is activated
-		TargetBuffer<T> targets;
+		TargetBuffer<T> targets = new TargetBuffer<T> ();
 
 		public BufferBlock () : this (defaultOptions)
 		{
@@ -50,16 +51,15 @@ namespace System.Threading.Tasks.Dataflow
 		public BufferBlock (DataflowBlockOptions dataflowBlockOptions)
 		{
 			if (dataflowBlockOptions == null)
-				throw new ArgumentNullException (dataflowBlockOptions);
+				throw new ArgumentNullException ("dataflowBlockOptions");
 
 			this.dataflowBlockOptions = dataflowBlockOptions;
-			this.processQueue = ProcessQueue;
-			this.messageBox = new PassingMessageBox<TInput> (messageQueue, compHelper, processQueue, dataflowBlockOptions);
+			this.messageBox = new PassingMessageBox<T> (messageQueue, compHelper, ProcessQueue, dataflowBlockOptions);
 		}
 
 		public DataflowMessageStatus OfferMessage (DataflowMessageHeader messageHeader,
-		                                           TInput messageValue,
-		                                           ISourceBlock<TInput> source,
+		                                           T messageValue,
+		                                           ISourceBlock<T> source,
 		                                           bool consumeToAccept)
 		{
 			return messageBox.OfferMessage (messageHeader, messageValue, source, consumeToAccept);
@@ -67,12 +67,57 @@ namespace System.Threading.Tasks.Dataflow
 
 		public IDisposable LinkTo (ITargetBlock<T> target, bool unlinkAfterOne)
 		{
-			return targets.AddTarget (target, unlinkAfterOne);
+			var result = targets.AddTarget (target, unlinkAfterOne);
+			ProcessQueue ();
+
+			return result;
+		}
+
+		public T ConsumeMessage (DataflowMessageHeader messageHeader, ITargetBlock<T> target, out bool messageConsumed)
+		{
+			if (!messageHeader.IsValid)
+				throw new ArgumentException ("The message header is not valid");
+			if (target == null)
+				throw new ArgumentNullException ("target");
+
+			// TODO
+			messageConsumed = true;
+			return default(T);
+		}
+
+		public void ReleaseReservation (DataflowMessageHeader messageHeader, ITargetBlock<T> target)
+		{
+			// TODO
+		}
+
+		public bool ReserveMessage (DataflowMessageHeader messageHeader, ITargetBlock<T> target)
+		{
+			// TODO
+			return false;
+		}
+
+		public bool TryReceive (Predicate<T> filter, out T item)
+		{
+			// TODO
+			item = default(T);
+			return false;
+		}
+
+		public bool TryReceiveAll (out IList<T> items)
+		{
+			// TODO
+			items = null;
+			return false;
 		}
 
 		void ProcessQueue ()
 		{
-			
+			ITargetBlock<T> target;
+			if ((target = targets.Current) == null)
+				return;
+			T input;
+			while (messageQueue.TryTake (out input))
+				target.OfferMessage (messageBox.GetNextHeader (), input, this, false);
 		}
 
 		public void Complete ()

@@ -84,12 +84,12 @@ namespace System.Threading.Tasks.Dataflow
 
 		public static IDisposable LinkTo<TOutput> (this ISourceBlock<TOutput> source, ITargetBlock<TOutput> target)
 		{
-			throw new NotImplementedException ();
+			return source.LinkTo (target, (_) => true);
 		}
 
 		public static IDisposable LinkTo<TOutput> (this ISourceBlock<TOutput> source, ITargetBlock<TOutput> target, Predicate<TOutput> predicate)
 		{
-			throw new NotImplementedException ();
+			return source.LinkTo (target, predicate, true);
 		}
 
 		public static IDisposable LinkTo<TOutput> (this ISourceBlock<TOutput> source,
@@ -97,7 +97,7 @@ namespace System.Threading.Tasks.Dataflow
 		                                           Predicate<TOutput> predicate,
 		                                           bool discardsMessages)
 		{
-			throw new NotImplementedException ();
+			return source.LinkTo (target, false);
 		}
 
 		public static Task<bool> OutputAvailableAsync<TOutput> (this ISourceBlock<TOutput> source)

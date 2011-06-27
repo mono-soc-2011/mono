@@ -34,19 +34,15 @@ namespace System.Threading.Tasks.Dataflow
 	internal class PassingMessageBox<TInput> : MessageBox<TInput>
 	{
 		readonly DataflowBlockOptions dataflowBlockOptions;
-		readonly BlockingCollection<TInput> messageQueue;
 		readonly Action processQueue;
-		readonly CompletionHelper compHelper;
 		
 		public PassingMessageBox (BlockingCollection<TInput> messageQueue,
 		                          CompletionHelper compHelper,
 		                          Action processQueue,
 		                          DataflowBlockOptions dataflowBlockOptions) : base (messageQueue, compHelper)
 		{
-			this.messageQueue = messageQueue;
 			this.dataflowBlockOptions = dataflowBlockOptions;
 			this.processQueue = processQueue;
-			this.compHelper = compHelper;
 		}
 
 		protected override void EnsureProcessing ()
