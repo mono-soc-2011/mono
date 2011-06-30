@@ -96,11 +96,12 @@ struct sigcontext {
 #define MONO_ARCH_CALLEE_REGS X86_CALLEE_REGS
 #define MONO_ARCH_CALLEE_SAVED_REGS X86_CALLER_REGS
 
-#define MONO_ARCH_CALLEE_FREGS (0xff & ~(regmask (MONO_MAX_FREGS)))
+/* xmm7 is reserved for use by some opcodes */
+#define MONO_ARCH_CALLEE_FREGS 0x7f
 #define MONO_ARCH_CALLEE_SAVED_FREGS 0
 
 /* All registers are clobered by a call */
-#define MONO_ARCH_CALLEE_XREGS (0xff & ~(regmask (MONO_MAX_XREGS)))
+#define MONO_ARCH_CALLEE_XREGS 0x7f
 #define MONO_ARCH_CALLEE_SAVED_XREGS 0
 
 #define MONO_ARCH_INST_FIXED_REG(desc) (((desc == ' ') || (desc == 'i')) ? -1 : ((desc == 's') ? X86_ECX : ((desc == 'a') ? X86_EAX : ((desc == 'd') ? X86_EDX : ((desc == 'l') ? X86_EAX : -1)))))
