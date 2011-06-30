@@ -223,7 +223,7 @@ float_div: dest:f src1:f src2:f len:4
 float_div_un: dest:f src1:f src2:f len:2
 float_rem: dest:f src1:f src2:f len:53
 float_rem_un: dest:f src1:f src2:f len:17
-float_neg: dest:f src1:f len:9
+float_neg: dest:f src1:f len:18
 float_not: dest:f src1:f len:2
 float_conv_to_i1: dest:y src1:f len:39
 float_conv_to_i2: dest:y src1:f len:39
@@ -290,7 +290,7 @@ sbb_imm: dest:i src1:i len:6 clob:1
 br_reg: src1:i len:2 nacl:5
 sin: dest:f src1:f len:26
 cos: dest:f src1:f len:26
-abs: dest:f src1:f len:7
+abs: dest:f src1:f len:18
 tan: dest:f src1:f len:49
 atan: dest:f src1:f len:8
 sqrt: dest:f src1:f len:4

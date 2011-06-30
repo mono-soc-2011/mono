@@ -3718,7 +3718,8 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			if (X86_USE_SSE_FP(cfg)) {
 				static double zero = -0.0;
 				g_assert (ins->sreg1 == ins->dreg);
-				x86_sse_xorpd_reg_mem (code, ins->dreg, &zero);
+				x86_sse_movsd_reg_mem (code, X86_XMM7, &zero);
+				x86_sse_xorpd_reg_reg (code, ins->dreg, X86_XMM7);
 			} else {
 				x86_fchs (code);
 			}
@@ -3745,7 +3746,8 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			if (X86_USE_SSE_FP(cfg)) {
 				static guint64 d = 0x7fffffffffffffffUL;
 				g_assert (ins->sreg1 == ins->dreg);
-				x86_sse_andpd_reg_mem (code, ins->dreg, &d);
+				x86_sse_movsd_reg_mem (code, X86_XMM7, &d);
+				x86_sse_andpd_reg_reg (code, ins->dreg, X86_XMM7);
 			} else {
 				x86_fabs (code);
 			}
