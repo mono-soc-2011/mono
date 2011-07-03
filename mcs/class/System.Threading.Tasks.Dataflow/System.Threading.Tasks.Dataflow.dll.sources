@@ -20,3 +20,4 @@ System.Threading.Tasks.Dataflow/MessageBox.cs
 System.Threading.Tasks.Dataflow/ExecutingMessageBox.cs
 System.Threading.Tasks.Dataflow/TargetBuffer.cs
 System.Threading.Tasks.Dataflow/PassingMessageBox.cs
+System.Threading.Tasks.Dataflow/MessageVault.cs

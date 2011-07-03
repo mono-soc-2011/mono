@@ -38,6 +38,7 @@ namespace System.Threading.Tasks.Dataflow
 		CompletionHelper compHelper = CompletionHelper.GetNew ();
 		BlockingCollection<T> messageQueue = new BlockingCollection<T> ();
 		MessageBox<T> messageBox;
+		MessageVault<T> vault;
 		DataflowBlockOptions dataflowBlockOptions;
 
 		// With each call to LinkTo, targets get added and when the current one is disposed, the next in line is activated
@@ -55,6 +56,7 @@ namespace System.Threading.Tasks.Dataflow
 
 			this.dataflowBlockOptions = dataflowBlockOptions;
 			this.messageBox = new PassingMessageBox<T> (messageQueue, compHelper, ProcessQueue, dataflowBlockOptions);
+			this.vault = new MessageVault<T> ();
 		}
 
 		public DataflowMessageStatus OfferMessage (DataflowMessageHeader messageHeader,
@@ -75,25 +77,17 @@ namespace System.Threading.Tasks.Dataflow
 
 		public T ConsumeMessage (DataflowMessageHeader messageHeader, ITargetBlock<T> target, out bool messageConsumed)
 		{
-			if (!messageHeader.IsValid)
-				throw new ArgumentException ("The message header is not valid");
-			if (target == null)
-				throw new ArgumentNullException ("target");
-
-			// TODO
-			messageConsumed = true;
-			return default(T);
+			return vault.ConsumeMessage (messageConsumed, target, out messageConsumed);
 		}
 
 		public void ReleaseReservation (DataflowMessageHeader messageHeader, ITargetBlock<T> target)
 		{
-			// TODO
+			vault.ReleaseReservation (messageHeader, target);
 		}
 
 		public bool ReserveMessage (DataflowMessageHeader messageHeader, ITargetBlock<T> target)
 		{
-			// TODO
-			return false;
+			return vault.ReserveMessage (messageHeader, target);
 		}
 
 		public bool TryReceive (Predicate<T> filter, out T item)

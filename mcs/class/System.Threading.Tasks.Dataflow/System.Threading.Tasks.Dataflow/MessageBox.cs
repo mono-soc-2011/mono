@@ -31,6 +31,9 @@ using System.Collections.Concurrent;
 
 namespace System.Threading.Tasks.Dataflow
 {
+	/* In MessageBox we store message that have been offered to us so that they can be
+	 * later processed
+	 */
 	internal class MessageBox<TInput>
 	{
 		readonly CompletionHelper compHelper;
