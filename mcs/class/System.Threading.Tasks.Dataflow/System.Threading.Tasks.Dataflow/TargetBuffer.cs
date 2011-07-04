@@ -91,7 +91,7 @@ namespace System.Threading.Tasks.Dataflow
 					}
 
 					return w.Target;
-				}				
+				}
 			}
 		}
 	}
