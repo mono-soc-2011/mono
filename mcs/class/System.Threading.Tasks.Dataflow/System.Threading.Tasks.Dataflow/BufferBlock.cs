@@ -64,7 +64,7 @@ namespace System.Threading.Tasks.Dataflow
 		                                           ISourceBlock<T> source,
 		                                           bool consumeToAccept)
 		{
-			return messageBox.OfferMessage (messageHeader, messageValue, source, consumeToAccept);
+			return messageBox.OfferMessage (this, messageHeader, messageValue, source, consumeToAccept);
 		}
 
 		public IDisposable LinkTo (ITargetBlock<T> target, bool unlinkAfterOne)
@@ -77,7 +77,7 @@ namespace System.Threading.Tasks.Dataflow
 
 		public T ConsumeMessage (DataflowMessageHeader messageHeader, ITargetBlock<T> target, out bool messageConsumed)
 		{
-			return vault.ConsumeMessage (messageConsumed, target, out messageConsumed);
+			return vault.ConsumeMessage (messageHeader, target, out messageConsumed);
 		}
 
 		public void ReleaseReservation (DataflowMessageHeader messageHeader, ITargetBlock<T> target)

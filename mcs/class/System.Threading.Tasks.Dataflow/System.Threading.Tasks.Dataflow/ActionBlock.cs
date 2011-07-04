@@ -76,7 +76,7 @@ namespace System.Threading.Tasks.Dataflow
 		                                           ISourceBlock<TInput> source,
 		                                           bool consumeToAccept)
 		{
-			return messageBox.OfferMessage (messageHeader, messageValue, source, consumeToAccept);
+			return messageBox.OfferMessage (this, messageHeader, messageValue, source, consumeToAccept);
 		}
 
 		void ProcessQueue ()

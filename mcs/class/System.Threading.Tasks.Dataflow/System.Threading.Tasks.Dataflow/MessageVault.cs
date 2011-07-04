@@ -88,7 +88,7 @@ namespace System.Threading.Tasks.Dataflow
 			return Interlocked.CompareExchange (ref slot.Reserved, target, null) == null;
 		}
 
-		public void ReleaseMessage (DataflowMessageHeader header, ITargetBlock<T> target)
+		public void ReleaseReservation (DataflowMessageHeader header, ITargetBlock<T> target)
 		{
 			if (!header.IsValid)
 				throw new ArgumentException ("header", "Header is is not valid");

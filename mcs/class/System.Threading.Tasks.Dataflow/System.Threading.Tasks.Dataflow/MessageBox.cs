@@ -46,13 +46,23 @@ namespace System.Threading.Tasks.Dataflow
 			this.messageQueue = messageQueue;
 		}
 
-		public DataflowMessageStatus OfferMessage (DataflowMessageHeader messageHeader,
+		public DataflowMessageStatus OfferMessage (ITargetBlock<TInput> target,
+		                                           DataflowMessageHeader messageHeader,
 		                                           TInput messageValue,
 		                                           ISourceBlock<TInput> source,
 		                                           bool consumeToAccept)
 		{
 			if (!messageHeader.IsValid)
 				return DataflowMessageStatus.Declined;
+
+			if (consumeToAccept) {
+				bool consummed;
+				source.ConsumeMessage (messageHeader, target, out consummed);
+				// TODO: find correct behavior
+				if (!consummed)
+					return DataflowMessageStatus.NotAvailable;
+			}
+
 			try {
 				messageQueue.Add (messageValue);
 			} catch (InvalidOperationException) {
