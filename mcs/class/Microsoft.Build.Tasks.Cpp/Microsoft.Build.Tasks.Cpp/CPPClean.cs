@@ -43,8 +43,8 @@ namespace Microsoft.Build.Tasks.Cpp
     public class CPPClean : TaskExtension
     {
         public CPPClean()
-		{
-		}
+        {
+        }
 
         public override bool Execute()
         {
