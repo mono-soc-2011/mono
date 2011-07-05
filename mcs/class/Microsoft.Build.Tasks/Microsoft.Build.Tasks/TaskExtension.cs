@@ -33,7 +33,7 @@ using Microsoft.Build.Utilities;
 namespace Microsoft.Build.Tasks {
 	public abstract class TaskExtension : Task {
 
-		internal TaskExtension ()
+        public TaskExtension()
 		{
 		}
 

@@ -33,7 +33,7 @@ using Microsoft.Build.Utilities;
 namespace Microsoft.Build.Tasks {
 	public abstract class ToolTaskExtension : ToolTask {
 
-		internal ToolTaskExtension ()
+		public ToolTaskExtension ()
 		{
 		}
 	
