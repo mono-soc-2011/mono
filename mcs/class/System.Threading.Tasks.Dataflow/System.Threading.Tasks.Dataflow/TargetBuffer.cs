@@ -25,12 +25,15 @@
 #if NET_4_0 || MOBILE
 
 using System;
+using System.Linq;
 using System.Threading.Tasks;
+using System.Collections;
+using System.Collections.Generic;
 using System.Collections.Concurrent;
 
 namespace System.Threading.Tasks.Dataflow
 {
-	internal class TargetBuffer<T>
+	internal class TargetBuffer<T> : IEnumerable<ITargetBlock<T>>
 	{
 		ConcurrentQueue<TargetWaiter> targetWaiters = new ConcurrentQueue<TargetWaiter> ();
 
@@ -93,6 +96,16 @@ namespace System.Threading.Tasks.Dataflow
 					return w.Target;
 				}
 			}
+		}
+
+		public IEnumerator<ITargetBlock<T>> GetEnumerator ()
+		{
+			return targetWaiters.Select (w => w.Target).GetEnumerator ();
+		}
+
+		IEnumerator IEnumerable.GetEnumerator ()
+		{
+			return targetWaiters.Select (w => w.Target).GetEnumerator ();
 		}
 	}
 }
