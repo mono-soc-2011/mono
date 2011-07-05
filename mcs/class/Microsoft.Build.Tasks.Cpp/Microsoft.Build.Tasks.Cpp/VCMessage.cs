@@ -43,8 +43,8 @@ namespace Microsoft.Build.Tasks.Cpp
     public class VCMessage : Task
     {
         public VCMessage()
-		{
-		}
+        {
+        }
 
         public override bool Execute()
         {
