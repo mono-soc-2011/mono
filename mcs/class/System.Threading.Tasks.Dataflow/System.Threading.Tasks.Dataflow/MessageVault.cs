@@ -1,4 +1,4 @@
-// BufferBlock.cs
+// MessageVault.cs
 //
 // Copyright (c) 2011 Jérémie "garuma" Laval
 //
@@ -39,7 +39,7 @@ namespace System.Threading.Tasks.Dataflow
 		struct ReservationSlot
 		{
 			public T Data;
-			public ITargetBlock<T> Reserved;
+			public IDataflowBlock Reserved;
 
 			public ReservationSlot (T data)
 			{
@@ -58,7 +58,7 @@ namespace System.Threading.Tasks.Dataflow
 			return store.TryAdd (header, new ReservationSlot (data));
 		}
 
-		public T ConsumeMessage (DataflowMessageHeader header, ITargetBlock<T> target, out bool messageConsummed)
+		public T ConsumeMessage (DataflowMessageHeader header, IDataflowBlock target, out bool messageConsummed)
 		{
 			messageConsummed = false;
 			if (!header.IsValid)
@@ -74,7 +74,7 @@ namespace System.Threading.Tasks.Dataflow
 			return slot.Data;
 		}
 
-		public bool ReserveMessage (DataflowMessageHeader header, ITargetBlock<T> target)
+		public bool ReserveMessage (DataflowMessageHeader header, IDataflowBlock target)
 		{
 			if (!header.IsValid)
 				throw new ArgumentException ("header", "Header is is not valid");
@@ -88,7 +88,7 @@ namespace System.Threading.Tasks.Dataflow
 			return Interlocked.CompareExchange (ref slot.Reserved, target, null) == null;
 		}
 
-		public void ReleaseReservation (DataflowMessageHeader header, ITargetBlock<T> target)
+		public void ReleaseReservation (DataflowMessageHeader header, IDataflowBlock target)
 		{
 			if (!header.IsValid)
 				throw new ArgumentException ("header", "Header is is not valid");
