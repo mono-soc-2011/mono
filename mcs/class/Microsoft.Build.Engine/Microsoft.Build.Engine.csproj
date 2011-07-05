@@ -1,4 +1,5 @@
-﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
     <OutputType>Library</OutputType>
     <RootNamespace>Microsoft.Build.Engine</RootNamespace>
@@ -6,11 +7,33 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{49CC9B64-E28A-4818-97F9-301E14B383B9}</ProjectGuid>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>2.0</OldToolsVersion>
+    <TargetFrameworkProfile />
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <OutputPath>.\</OutputPath>
+    <OutputPath>..\lib\net_4_0\</OutputPath>
     <Optimize>False</Optimize>
-    <DefineConstants>TRACE;DEBUG;NET_2_0</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;NET_1_1;NET_2_0;NET_3_0;NET_3_5;NET_4_0</DefineConstants>
     <DebugSymbols>True</DebugSymbols>
     <DebugType>Full</DebugType>
     <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
@@ -39,12 +62,19 @@
     <DebugType>Full</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>
+    </AssemblyOriginatorKeyFile>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Data.Linq" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.Build.Framework" />
-    <Reference Include="Microsoft.Build.Utilities" />
   </ItemGroup>
   <ItemGroup Condition=" '$(Configuration)' == 'DebugMS' ">
     <Compile Include="Assembly\AssemblyInfo.cs" />
@@ -53,7 +83,9 @@
     <Compile Include="..\..\build\common\Consts.cs" />
     <Compile Include="..\..\build\common\MonoTODOAttribute.cs" />
     <Compile Include="..\Microsoft.Build.Framework\Mono.XBuild.Framework/AssemblyLoadInfo.cs" />
+    <Compile Include="..\Microsoft.Build.Utilities\Mono.XBuild.Utilities/MSBuildUtils.cs" />
     <Compile Include="..\Microsoft.Build.Utilities\Mono.XBuild.Utilities/ReservedNameUtils.cs" />
+    <Compile Include="..\..\tools\xbuild\SolutionParser.cs" />
     <Compile Include="Microsoft.Build.BuildEngine\BatchingImplBase.cs" />
     <Compile Include="Microsoft.Build.BuildEngine\BuildChoose.cs" />
     <Compile Include="Microsoft.Build.BuildEngine\BuildEngine.cs" />
@@ -84,6 +116,7 @@
     <Compile Include="Microsoft.Build.BuildEngine\EventSource.cs" />
     <Compile Include="Microsoft.Build.BuildEngine\Expression.cs" />
     <Compile Include="Microsoft.Build.BuildEngine\ExpressionCollection.cs" />
+    <Compile Include="Microsoft.Build.BuildEngine\ExpressionEvaluationException.cs" />
     <Compile Include="Microsoft.Build.BuildEngine\ExpressionParseException.cs" />
     <Compile Include="Microsoft.Build.BuildEngine\FileLogger.cs" />
     <Compile Include="Microsoft.Build.BuildEngine\GroupingCollection.cs" />
@@ -94,11 +127,12 @@
     <Compile Include="Microsoft.Build.BuildEngine\InvalidProjectFileException.cs" />
     <Compile Include="Microsoft.Build.BuildEngine\IReference.cs" />
     <Compile Include="Microsoft.Build.BuildEngine\ItemReference.cs" />
+    <Compile Include="Microsoft.Build.BuildEngine\LogExtensions.cs" />
     <Compile Include="Microsoft.Build.BuildEngine\MetadataReference.cs" />
     <Compile Include="Microsoft.Build.BuildEngine\Project.cs" />
+    <Compile Include="Microsoft.Build.BuildEngine\ProjectLoadSettings.cs" />
     <Compile Include="Microsoft.Build.BuildEngine\PropertyPosition.cs" />
     <Compile Include="Microsoft.Build.BuildEngine\PropertyReference.cs" />
-    <Compile Include="Microsoft.Build.BuildEngine\SolutionParser.cs" />
     <Compile Include="Microsoft.Build.BuildEngine\Target.cs" />
     <Compile Include="Microsoft.Build.BuildEngine\TargetBatchingImpl.cs" />
     <Compile Include="Microsoft.Build.BuildEngine\TargetCollection.cs" />
@@ -106,10 +140,40 @@
     <Compile Include="Microsoft.Build.BuildEngine\TaskDatabase.cs" />
     <Compile Include="Microsoft.Build.BuildEngine\TaskEngine.cs" />
     <Compile Include="Microsoft.Build.BuildEngine\Token.cs" />
+    <Compile Include="Microsoft.Build.BuildEngine\Toolset.cs" />
+    <Compile Include="Microsoft.Build.BuildEngine\ToolsetCollection.cs" />
+    <Compile Include="Microsoft.Build.BuildEngine\ToolsetDefinitionLocations.cs" />
+    <Compile Include="Microsoft.Build.BuildEngine\UnknownToolsVersionException.cs" />
     <Compile Include="Microsoft.Build.BuildEngine\UsingTask.cs" />
     <Compile Include="Microsoft.Build.BuildEngine\UsingTaskCollection.cs" />
     <Compile Include="Microsoft.Build.BuildEngine\Utilities.cs" />
     <Compile Include="Microsoft.Build.BuildEngine\WriteHandler.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 3.1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.Build.Utilities\Microsoft.Build.Utilities-net_4_0.csproj">
+      <Project>{A70866B1-D2A3-4CE3-9C26-499D5BBDB2F0}</Project>
+      <Name>Microsoft.Build.Utilities-net_4_0</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="BuildEngine.snk" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
 </Project>
