@@ -36,7 +36,7 @@ namespace System.Threading.Tasks.Dataflow
 	 */
 	internal class MessageVault<T>
 	{
-		struct ReservationSlot
+		class ReservationSlot
 		{
 			public T Data;
 			public IDataflowBlock Reserved;
