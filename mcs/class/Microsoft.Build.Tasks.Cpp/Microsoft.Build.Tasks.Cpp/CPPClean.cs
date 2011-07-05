@@ -40,89 +40,89 @@ using Microsoft.Build.Utilities;
 
 namespace Microsoft.Build.Tasks.Cpp
 {
-    public class CPPClean : TaskExtension
-    {
-        public CPPClean()
-        {
-        }
+	public class CPPClean : Task
+	{
+		public CPPClean()
+		{
+		}
 
-        public override bool Execute()
-        {
-            // TODO: Add support for wildcards in directories.
+		public override bool Execute()
+		{
+			// TODO: Add support for wildcards in directories.
 
-            List<ITaskItem> filesDeleted = new List<ITaskItem>();
+			List<ITaskItem> filesDeleted = new List<ITaskItem>();
 
-            foreach (string directory in FoldersToClean.Split(';'))
-            {
-                if (!Directory.Exists(directory))
-                    continue;
+			foreach (string directory in FoldersToClean.Split(';'))
+			{
+				if (!Directory.Exists(directory))
+					continue;
 
-                deleteFilesOnDir(filesDeleted, directory);
-            }
+				deleteFilesOnDir(filesDeleted, directory);
+			}
 
-            DeletedFiles = filesDeleted.ToArray();
+			DeletedFiles = filesDeleted.ToArray();
 
-            return true;
-        }
+			return true;
+		}
 
-        private void deleteFilesOnDir(List<ITaskItem> filesDeleted, string directory)
-        {
-            foreach (string filePattern in FilePatternsToDeleteOnClean.Split(';'))
-            {
-                IEnumerable<string> files = Directory.EnumerateFiles(directory, filePattern);
-                deleteFiles(filesDeleted, directory, files);
-            }
-        }
+		private void deleteFilesOnDir(List<ITaskItem> filesDeleted, string directory)
+		{
+			foreach (string filePattern in FilePatternsToDeleteOnClean.Split(';'))
+			{
+				IEnumerable<string> files = Directory.EnumerateFiles(directory, filePattern);
+				deleteFiles(filesDeleted, directory, files);
+			}
+		}
 
-        private void deleteFiles(List<ITaskItem> filesDeleted, string directory, IEnumerable<string> files)
-        {
-            foreach (string file in files)
-            {
-                if (FilesExcludedFromClean.Contains(file))
-                    continue;
+		private void deleteFiles(List<ITaskItem> filesDeleted, string directory, IEnumerable<string> files)
+		{
+			foreach (string file in files)
+			{
+				if (FilesExcludedFromClean.Contains(file))
+					continue;
 
-                string fullPath = Path.Combine(directory, file);
+				string fullPath = Path.Combine(directory, file);
 
-                if (DoDelete)
-                    File.Delete(fullPath);
+				if (DoDelete)
+					File.Delete(fullPath);
 
-                filesDeleted.Add(new TaskItem(fullPath));
-            }
-        }
+				filesDeleted.Add(new TaskItem(fullPath));
+			}
+		}
 
-        [Output]
-        public ITaskItem[] DeletedFiles
-        {
-            get;
-            set;
-        }
+		[Output]
+		public ITaskItem[] DeletedFiles
+		{
+			get;
+			set;
+		}
 
-        public bool DoDelete
-        {
-            get;
-            set;
-        }
+		public bool DoDelete
+		{
+			get;
+			set;
+		}
 
-        [Required]
-        public string FilePatternsToDeleteOnClean
-        {
-            get;
-            set;
-        }
+		[Required]
+		public string FilePatternsToDeleteOnClean
+		{
+			get;
+			set;
+		}
 
-        public string FilesExcludedFromClean
-        {
-            get;
-            set;
-        }
+		public string FilesExcludedFromClean
+		{
+			get;
+			set;
+		}
 
-        [Required]
-        public string FoldersToClean
-        {
-            get;
-            set;
-        }
-    }
+		[Required]
+		public string FoldersToClean
+		{
+			get;
+			set;
+		}
+	}
 }
 
 #endif

@@ -40,37 +40,37 @@ using Microsoft.Build.Utilities;
 
 namespace Microsoft.Build.Tasks.Cpp
 {
-    public class VCMessage : Task
-    {
-        public VCMessage()
-        {
-        }
+	public class VCMessage : Task
+	{
+		public VCMessage()
+		{
+		}
 
-        public override bool Execute()
-        {
-            Log.LogMessage("VCMessage: %s (Code: %s)" + Arguments, Code);
-            return true;
-        }
+		public override bool Execute()
+		{
+			Log.LogMessage("VCMessage: %s (Code: %s)" + Arguments, Code);
+			return true;
+		}
 
-        public string Arguments
-        {
-            get;
-            set;
-        }
+		public string Arguments
+		{
+			get;
+			set;
+		}
 
-        [Required]
-        public string Code
-        {
-            get;
-            set;
-        }
+		[Required]
+		public string Code
+		{
+			get;
+			set;
+		}
 
-        public string Type
-        {
-            get;
-            set;
-        }
-    }
+		public string Type
+		{
+			get;
+			set;
+		}
+	}
 }
 
 #endif
