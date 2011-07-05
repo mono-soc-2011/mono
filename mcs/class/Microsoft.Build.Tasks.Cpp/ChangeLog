@@ -1,0 +1,4 @@
+2011-06-10  João Matos  <triton@vapor3d.org>
+
+	* Microsoft.Build.Tasks.Cpp:
+		Added preliminary version of tasks.
