@@ -1,6 +1,7 @@
 Assembly/AssemblyInfo.cs
 ../../build/common/Consts.cs
 ../../build/common/MonoTODOAttribute.cs
+Microsoft.Build.Tasks.Cpp/ToolTaskExtension.cs
 Microsoft.Build.Tasks.Cpp/CL.cs
 Microsoft.Build.Tasks.Cpp/CPPClean.cs
 Microsoft.Build.Tasks.Cpp/LIB.cs
