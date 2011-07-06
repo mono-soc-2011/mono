@@ -1,8 +1,11 @@
 //
-// LIB.cs: Task for C++ linker
+// Link.cs: Task for C++ linker
 // 
-// For an overview of the LIB options, you can check:
-//  http://msdn.microsoft.com/en-us/library/0xb6w1f8.aspx
+// For an overview of the Link task options, you can check:
+//  http://msdn.microsoft.com/en-us/library/ee862471.aspx
+//
+// For an overview of the LINK tool options, you can check:
+//  http://msdn.microsoft.com/en-us/library/y0zzbyt4.aspx
 //
 // Author:
 //   João Matos (triton@vapor3d.org)
