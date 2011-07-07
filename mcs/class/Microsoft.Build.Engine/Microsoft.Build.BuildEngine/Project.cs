@@ -943,6 +943,9 @@ namespace Microsoft.Build.BuildEngine {
 					case "ItemGroup":
 						AddItemGroup (xe, ip);
 						break;
+					case "ItemDefinitionGroup":
+						AddItemDefinitionGroup(xe, ip);
+						break;
 					case "PropertyGroup":
 						AddPropertyGroup (xe, ip);
 						break;
@@ -1197,6 +1200,11 @@ namespace Microsoft.Build.BuildEngine {
 		{
 			BuildItemGroup big = new BuildItemGroup (xmlElement, this, importedProject, false);
 			ItemGroups.Add (big);
+		}
+
+		void AddItemDefinitionGroup(XmlElement xe, ImportedProject ip)
+		{
+			throw new NotImplementedException();
 		}
 		
 		void AddPropertyGroup (XmlElement xmlElement, ImportedProject importedProject)
