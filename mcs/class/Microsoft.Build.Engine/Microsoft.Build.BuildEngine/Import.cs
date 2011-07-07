@@ -134,6 +134,14 @@ namespace Microsoft.Build.BuildEngine {
 			string project_attribute = xmlElement.GetAttribute ("Project");
 			string condition_attribute = xmlElement.GetAttribute ("Condition");
 
+            // Visual Studio project files use a property called VCTargetsPath, that is defined in the
+            // registry under the key HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\MSBuild\ToolsVersions\4.0.
+            // Override it as xbuild doesn't know about it.
+            bool has_vc_ref = project_attribute.IndexOf("$(VCTargetsPath)") >= 0;
+
+            if (has_vc_ref)
+                project_attribute = project_attribute.Replace("$(VCTargetsPath)", "$(MSBuildExtensionsPath)");
+
 			bool has_extn_ref = project_attribute.IndexOf ("$(MSBuildExtensionsPath)") >= 0 ||
 						project_attribute.IndexOf ("$(MSBuildExtensionsPath32)") >= 0 ||
 						project_attribute.IndexOf ("$(MSBuildExtensionsPath64)") >= 0;
