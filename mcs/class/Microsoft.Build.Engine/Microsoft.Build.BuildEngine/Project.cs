@@ -1036,6 +1036,9 @@ namespace Microsoft.Build.BuildEngine {
 			evaluatedProperties.AddProperty (new BuildProperty ("MSBuildProjectDefaultTargets", DefaultTargets, PropertyType.Reserved));
 			evaluatedProperties.AddProperty (new BuildProperty ("OS", OS, PropertyType.Environment));
 
+			string appData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Microsoft\MSBuild\v4.0");
+			evaluatedProperties.AddProperty(new BuildProperty("UserRootDir", appData, PropertyType.Environment));
+
 			// FIXME: make some internal method that will work like GetDirectoryName but output String.Empty on null/String.Empty
 			string projectDir;
 			if (FullFileName == String.Empty)
