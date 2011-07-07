@@ -937,6 +937,9 @@ namespace Microsoft.Build.BuildEngine {
 					case "Import":
 						AddImport (xe, ip, true);
 						break;
+					case "ImportGroup":
+						AddImportGroup(xe, ip, true);
+						break;
 					case "ItemGroup":
 						AddItemGroup (xe, ip);
 						break;
@@ -1164,6 +1167,30 @@ namespace Microsoft.Build.BuildEngine {
 
 			import.Evaluate (project_load_settings == ProjectLoadSettings.IgnoreMissingImports);
 			return true;
+		}
+
+		void AddImportGroup(XmlElement xmlElement, ImportedProject importingProject, bool evaluate_properties)
+		{
+			if (xmlElement.HasAttribute("Condition"))
+			{
+				String condition = xmlElement.GetAttribute("Condition");
+
+				if (!ConditionParser.ParseAndEvaluate(condition, this))
+				{
+					ParentEngine.LogMessage(MessageImportance.Low,
+							"Not importing group as the condition '{0}' is false", condition);
+					return;
+				}
+			}
+
+			foreach (XmlNode xn in xmlElement.ChildNodes)
+			{
+				if (!(xn is XmlElement))
+					continue;
+
+				XmlElement xe = (XmlElement)xn;
+				AddImport(xe, importingProject, evaluate_properties);
+			}
 		}
 
 		void AddItemGroup (XmlElement xmlElement, ImportedProject importedProject)
