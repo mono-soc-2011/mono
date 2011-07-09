@@ -265,6 +265,11 @@ namespace Microsoft.Build.Tasks.Cpp {
 			set { Bag["ExceptionHandling"] = value; }
 		}
 
+		public string[] ExcludedInputPaths {
+			get { return (string[])Bag["ExcludedInputPaths"]; }
+			set { Bag["ExcludedInputPaths"] = value; }
+		}
+
 		public bool ExpandAttributedSource {
 			get { return (bool)Bag["ExpandAttributedSource"]; }
 			set { Bag["ExpandAttributedSource"] = value; }
@@ -459,6 +464,11 @@ namespace Microsoft.Build.Tasks.Cpp {
 		public bool SuppressStartupBanner {
 			get { return (bool)Bag["SuppressStartupBanner"]; }
 			set { Bag["SuppressStartupBanner"] = value; }
+		}
+
+		public string ToolArchitecture {
+			get { return (string)Bag["ToolArchitecture"]; }
+			set { Bag["ToolArchitecture"] = value; }
 		}
 
 		public string[] TreatSpecificWarningsAsErrors {
