@@ -37,6 +37,8 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Mono.XBuild.Utilities;
 
+using Microsoft.Win32;
+
 namespace Microsoft.Build.BuildEngine {
 	public class BuildProperty {
 	
@@ -70,6 +72,9 @@ namespace Microsoft.Build.BuildEngine {
 			this.finalValue = propertyValue;
 			this.propertyType = propertyType;
 			this.isImported = false;
+
+			if (IsRegistryProperty(name))
+				propertyType = PropertyType.Registry;
 		}
 
 		internal BuildProperty (Project parentProject, XmlElement propertyElement)
@@ -121,11 +126,24 @@ namespace Microsoft.Build.BuildEngine {
 		{
 			BuildProperty evaluated = new BuildProperty (Name, Value);
 
-			// In evaluate phase, properties are not expanded
-			Expression exp = new Expression ();
-			exp.Parse (Value, ParseOptions.None);
-			evaluated.finalValue = (string) exp.ConvertTo (parentProject, typeof (string),
-					ExpressionOptions.DoNotExpandItemRefs);
+			// Syntax for registry properties is: $(Registry:<key name>[@<value name>])
+			if (propertyType == PropertyType.Registry) {
+				int indexKey = name.IndexOf(':');
+				int indexValue = name.LastIndexOf("@");
+
+				string key = name.Substring(indexKey, (indexValue > 0) ? indexValue : name.Length - 1);
+				string value = (indexValue > 0) ? name.Substring(indexValue) : String.Empty;
+
+				string val = (String) Registry.GetValue(key, value, String.Empty);
+				evaluated.finalValue = val;
+			}
+			else {
+				// In evaluate phase, properties are not expanded
+				Expression exp = new Expression();
+				exp.Parse(Value, ParseOptions.None);
+				evaluated.finalValue = (string)exp.ConvertTo(parentProject, typeof(string),
+						ExpressionOptions.DoNotExpandItemRefs);
+			}
 
 			parentProject.EvaluatedProperties.AddProperty (evaluated);
 		}
@@ -180,6 +198,11 @@ namespace Microsoft.Build.BuildEngine {
 			} finally {
 				converting = false;
 			}
+		}
+
+		static bool IsRegistryProperty(string propertyName)
+		{
+			return propertyName.StartsWith("registry:", StringComparison.InvariantCultureIgnoreCase);
 		}
 
 		internal bool FromXml {
@@ -249,7 +272,8 @@ namespace Microsoft.Build.BuildEngine {
 		Reserved,
 		Global,
 		Normal,
-		Environment
+		Environment,
+		Registry
 	}
 }
 
