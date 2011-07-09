@@ -48,25 +48,23 @@ namespace Microsoft.Build.Tasks.Cpp
 
 		public override bool Execute()
 		{
-			Log.LogMessage("VCMessage: %s (Code: %s)" + Arguments, Code);
+			string message = String.Format("VCMessage: {0} (Code: {1})", Arguments, Code);
+			Log.LogMessage(message);
 			return true;
 		}
 
-		public string Arguments
-		{
+		public string Arguments {
 			get;
 			set;
 		}
 
 		[Required]
-		public string Code
-		{
+		public string Code {
 			get;
 			set;
 		}
 
-		public string Type
-		{
+		public string Type {
 			get;
 			set;
 		}
