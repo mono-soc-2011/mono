@@ -34,6 +34,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 using Mono.XBuild.Utilities;
+using Microsoft.Win32;
 
 namespace Microsoft.Build.BuildEngine {
 
@@ -59,6 +60,7 @@ namespace Microsoft.Build.BuildEngine {
 
 		static Regex item_regex;
 		static Regex property_regex;
+		static Regex property_registry_regex;
 		static Regex metadata_regex;
 	
 		public Expression ()
@@ -325,10 +327,24 @@ namespace Microsoft.Build.BuildEngine {
 			get {
 				if (property_regex == null)
 					property_regex = new Regex (
-						@"\$\(\s*"
+						@"(\$\(\s*"
 						+ @"(?<name>[_a-zA-Z][_\-0-9a-zA-Z]*)"
-						+ @"\s*\)");
+						+ @"\s*\))"
+						+ @"|" + PropertyRegistryRegex);
 				return property_regex;
+			}
+		}
+
+		static Regex PropertyRegistryRegex {
+			get {
+				if (property_registry_regex == null)
+					property_registry_regex = new Regex (
+						@"(?<is_regex>\$\(\s*"
+						+ @"(?i)registry\s*:\s*"
+						+ @"(?<key>[_a-zA-Z][\\_\-0-9a-zA-Z]*)"
+						+ @"(?<has_value>@(?<value>[_\-0-9a-zA-Z.]+))?"
+						+ @"\s*\))");
+				return property_registry_regex;
 			}
 		}
 
