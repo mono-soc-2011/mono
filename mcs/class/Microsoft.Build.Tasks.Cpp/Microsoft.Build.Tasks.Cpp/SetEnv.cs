@@ -46,12 +46,13 @@ namespace Microsoft.Build.Tasks.Cpp
 		{
 		}
 
+		[MonoTODO]
 		public override bool Execute()
 		{
 			EnvironmentVariableTarget target = EnvironmentVariableTarget.User;
 
 			if ((Target != null) && Target.Length > 0)
-				target = (EnvironmentVariableTarget) Enum.Parse(typeof(EnvironmentVariableTarget), Target);
+				target = (EnvironmentVariableTarget)Enum.Parse(typeof(EnvironmentVariableTarget), Target);
 
 			string env = Environment.GetEnvironmentVariable(Name, target);
 
@@ -71,7 +72,8 @@ namespace Microsoft.Build.Tasks.Cpp
 			else
 				finalValue = Value;
 
-			Environment.SetEnvironmentVariable(Name, finalValue, target);
+			// Using an explicit target here is resuling in a huge slowdown (about 300ms).
+			Environment.SetEnvironmentVariable(Name, finalValue/*, target*/);
 
 			OutputEnvironmentVariable = finalValue;
 
