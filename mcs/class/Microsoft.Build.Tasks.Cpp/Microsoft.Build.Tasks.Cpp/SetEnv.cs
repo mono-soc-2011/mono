@@ -67,7 +67,7 @@ namespace Microsoft.Build.Tasks.Cpp
 			string finalValue;
 
 			if (Prefix)
-				finalValue = env + Value;
+				finalValue = Value + ";" + env;
 			else
 				finalValue = Value;
 
