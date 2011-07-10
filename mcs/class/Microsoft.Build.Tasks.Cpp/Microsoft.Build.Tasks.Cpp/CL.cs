@@ -542,7 +542,7 @@ namespace Microsoft.Build.Tasks.Cpp {
 		}
 
 		protected override string GenerateFullPathToTool() {
-			return ToolName;
+			return Path.Combine(ToolPath, ToolName);
 		}
 
 		protected override string ToolName {
