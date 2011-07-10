@@ -127,6 +127,7 @@ namespace Microsoft.Build.Utilities
 
 				var pendingLineFragmentOutput = new StringBuilder ();
 				var pendingLineFragmentError = new StringBuilder ();
+				
 				var environmentOverride = GetAndLogEnvironmentVariables ();
 				try {
 					// When StartProcess returns, the process has already .Start()'ed
@@ -361,8 +362,16 @@ namespace Microsoft.Build.Utilities
 		SCS.StringDictionary GetAndLogEnvironmentVariables ()
 		{
 			var env_vars = GetEnvironmentVariables ();
+
 			if (env_vars == null)
-				return env_vars;
+				env_vars = new StringDictionary();
+
+			// Forward the parent process env vars.
+			IDictionary cur_vars = Environment.GetEnvironmentVariables();
+
+			foreach (DictionaryEntry kvp in cur_vars) {
+				env_vars.Add((string)kvp.Key, (string)kvp.Value);
+			}
 
 			Log.LogMessage (MessageImportance.Low, "Environment variables being passed to the tool:");
 			foreach (DictionaryEntry entry in env_vars)
