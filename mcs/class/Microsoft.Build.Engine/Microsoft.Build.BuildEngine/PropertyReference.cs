@@ -34,21 +34,39 @@ using System.Collections;
 using System.Collections.Generic;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.Win32;
 
 namespace Microsoft.Build.BuildEngine {
 	internal class PropertyReference : IReference {
-		
+
 		string	name;
 		int	start;
 		int	length;
-		
+
+		bool is_registry;
+		string reg_key;
+		string reg_value;
+
 		public PropertyReference (string name, int start, int length)
 		{
 			this.name = name;
 			this.start = start;
 			this.length = length;
+
+			this.is_registry = false;
 		}
-		
+
+		public PropertyReference(string name, int start, int length, string key, string value)
+		{
+			this.name = name;
+			this.start = start;
+			this.length = length;
+
+			this.reg_key = key;
+			this.reg_value = value;
+
+			this.is_registry = true;
+		}
 
 		// when evaluating items: expand: true
 		// all other times, expand: true
@@ -57,15 +75,20 @@ namespace Microsoft.Build.BuildEngine {
 		{
 			if (project == null)
 				throw new ArgumentNullException ("project");
-			
-			BuildProperty bp = project.EvaluatedProperties [name];
-			if (bp == null)
-				return String.Empty;
 
-			if (options == ExpressionOptions.DoNotExpandItemRefs)
-				return bp.FinalValue;
+			if (is_registry) {
+				string val = (String)Registry.GetValue(reg_key, reg_value, String.Empty);
+				return val;
+			} else {
+				BuildProperty bp = project.EvaluatedProperties[name];
+				if (bp == null)
+					return String.Empty;
 
-			return bp.ConvertToString (project, ExpressionOptions.ExpandItemRefs);
+				if (options == ExpressionOptions.DoNotExpandItemRefs)
+					return bp.FinalValue;
+
+				return bp.ConvertToString(project, ExpressionOptions.ExpandItemRefs);
+			}
 		}
 
 		// when evaluating items: expand: true
@@ -103,6 +126,16 @@ namespace Microsoft.Build.BuildEngine {
 
 		public int End {
 			get { return start + length - 1; }
+		}
+
+		public string RegKey
+		{
+			get { return reg_key; }
+		}
+
+		public string RegValue
+		{
+			get { return reg_value; }
 		}
 
 		public override string ToString ()

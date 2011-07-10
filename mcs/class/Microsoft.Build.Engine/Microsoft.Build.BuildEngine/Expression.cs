@@ -217,12 +217,22 @@ namespace Microsoft.Build.BuildEngine {
 			m = PropertyRegex.Match (text);
 
 			while (m.Success) {
-				string name = null;
 				PropertyReference pr;
+				Group rg = m.Groups["is_registry"];
 				
-				name = m.Groups [PropertyRegex.GroupNumberFromName ("name")].Value;
-				
-				pr = new PropertyReference (name, m.Groups [0].Index, m.Groups [0].Length);
+				if (rg.Success) {
+					string key = m.Groups["key"].Value;
+					string value = "";
+					
+					if (m.Groups["has_value"].Success)
+						value = m.Groups["value"].Value;
+					
+					pr = new PropertyReference(rg.Value, rg.Index, rg.Length, key, value);
+				} else {
+					string name = m.Groups[PropertyRegex.GroupNumberFromName("name")].Value;
+					pr = new PropertyReference(name, m.Groups[0].Index, m.Groups[0].Length);
+				}
+
 				phase1.Add (pr);
 				m = m.NextMatch ();
 			}
@@ -339,7 +349,7 @@ namespace Microsoft.Build.BuildEngine {
 			get {
 				if (property_registry_regex == null)
 					property_registry_regex = new Regex (
-						@"(?<is_regex>\$\(\s*"
+						@"(?<is_registry>\$\(\s*"
 						+ @"(?i)registry\s*:\s*"
 						+ @"(?<key>[_a-zA-Z][\\_\-0-9a-zA-Z]*)"
 						+ @"(?<has_value>@(?<value>[_\-0-9a-zA-Z.]+))?"
