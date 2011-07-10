@@ -66,12 +66,12 @@ namespace Microsoft.Build.Tasks.Cpp
 
 			string finalValue;
 
-			if (Prefix)
+			if (Prefix && (env.Length > 0))
 				finalValue = Value + ";" + env;
 			else
 				finalValue = Value;
 
-			Environment.SetEnvironmentVariable(Name, finalValue);
+			Environment.SetEnvironmentVariable(Name, finalValue, target);
 
 			OutputEnvironmentVariable = finalValue;
 
