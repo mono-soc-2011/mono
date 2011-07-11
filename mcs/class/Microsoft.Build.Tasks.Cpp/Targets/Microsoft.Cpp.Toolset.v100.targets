@@ -1,0 +1,36 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+	<PropertyGroup>
+		<VSInstallDir Condition="'$(VSInstallDir)' == ''">$(registry:HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\SxS\VS7@10.0)</VSInstallDir>
+		<VCInstallDir Condition="'$(VCInstallDir)' == ''">$(registry:HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\SxS\VC7@10.0)</VCInstallDir>
+		<VCBinDir Condition="'$(VCToolsDir)' == ''">$(VCInstallDir)bin</VCBinDir>
+		<DevEnvDir Condition="'$(DevEnvDir)' == ''">$(VSInstallDir)Common7\IDE\</DevEnvDir>
+		<VS100CommonTools Condition="'$(VS100CommonTools)' == ''">$(VSInstallDir)Common7\Tools\</VS100CommonTools>
+		<WindowsSdkDir Condition="'$(WindowsSdkDir)' == ''">$(VCInstallDir)PlatformSDK\</WindowsSdkDir>
+		<CLToolPath Condition="'$(CLToolPath)' == ''">$(VCBinDir)</CLToolPath>
+	</PropertyGroup>
+
+	<Target Name="BuildSetupV100">
+		<!-- Set Visual C++ install location  -->
+		<SetEnv Name="VCINSTALLDIR" Value="$(VCInstallDir)"/>
+		<SetEnv Name="VS100COMNTOOLS" Value="$(VS100CommonTools)"/>
+		<!-- Executable Paths -->
+		<SetEnv Name="PATH" Prefix="true" Value="$(VCBinDir)"/>
+		<SetEnv Name="PATH" Prefix="true" Value="$(DevEnvDir)"/>
+		<!-- Include Paths -->
+		<SetEnv Name="INCLUDE" Prefix="true" Value="$(VCInstallDir)include"/>
+		<SetEnv Name="INCLUDE" Prefix="true" Value="$(VCInstallDir)ATLMFC\include"/>
+		<!-- Library Paths -->
+		<SetEnv Name="LIB" Prefix="true" Value="$(VCInstallDir)lib"/>
+		<SetEnv Name="LIB" Prefix="true" Value="$(VCInstallDir)ATLMFC\lib"/>
+		<SetEnv Name="LIBPATH" Prefix="true" Value="$(VCInstallDir)lib"/>
+		<SetEnv Name="LIBPATH" Prefix="true" Value="$(VCInstallDir)ATLMFC\lib"/>
+	</Target>
+	
+	<PropertyGroup>
+		<BuildSetupDependsOn>
+			BuildSetupV100;$(BuildSetupDependsOn)
+		</BuildSetupDependsOn>
+	</PropertyGroup>
+
+</Project>
