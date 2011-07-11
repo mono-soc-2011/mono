@@ -3,6 +3,7 @@ System.Threading.Tasks.Dataflow/BufferBlockTest.cs
 System.Threading.Tasks.Dataflow/TransformBlockTest.cs
 System.Threading.Tasks.Dataflow/BroadcastBlockTest.cs
 System.Threading.Tasks.Dataflow/WriteOnceBlockTest.cs
+System.Threading.Tasks.Dataflow/BatchBlockTest.cs
 System.Threading.Tasks.Dataflow/CompletionHelperTest.cs
 ../System.Threading.Tasks.Dataflow/CompletionHelper.cs
 System.Threading.Tasks/ConcurrentExclusiveSchedulerPairTest.cs
