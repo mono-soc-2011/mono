@@ -1,0 +1,213 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+	<!-- This file implements the build logic for C++ projects.
+	It should be named Microsoft.Cpp.targets to mantain compatibility with
+	Visual C++ generated projects so they can be built out of the box using
+	these xbuild targets. -->
+
+	<!-- Declare all C++ specific tasks so they can be used later in the targets -->
+	
+	<UsingTask TaskName="Microsoft.Build.Tasks.Cpp.CL" AssemblyFile="Microsoft.Build.Tasks.Cpp.v4.0.dll" />
+	<UsingTask TaskName="Microsoft.Build.Tasks.Cpp.LIB" AssemblyFile="Microsoft.Build.Tasks.Cpp.v4.0.dll" />
+	<UsingTask TaskName="Microsoft.Build.Tasks.Cpp.Link" AssemblyFile="Microsoft.Build.Tasks.Cpp.v4.0.dll" />
+	<UsingTask TaskName="Microsoft.Build.Tasks.Cpp.CPPClean" AssemblyFile="Microsoft.Build.Tasks.Cpp.v4.0.dll" />
+	<UsingTask TaskName="Microsoft.Build.Tasks.Cpp.VCMessage" AssemblyFile="Microsoft.Build.Tasks.Cpp.v4.0.dll" />
+	<UsingTask TaskName="Microsoft.Build.Tasks.Cpp.SetEnv" AssemblyFile="Microsoft.Build.Tasks.Cpp.v4.0.dll" />
+	
+	<PropertyGroup>
+		<LanguageExtension>.cpp</LanguageExtension>
+		<Language>C++</Language>
+	</PropertyGroup>
+	
+	<!-- C++ builds are separated in different phases: Cleaning, Preparation, Compile and Linking
+	
+	  0. Optionally you can do a clean, which will delete all temporary files and folders that
+	  have been created by and to support the build process.
+	  
+	  1. The prepare phase is used to create the needed temporary directories for object files
+	  and pre-compiled files.
+	  
+	  2. The setup phase sets up the toolchains by setting up some needed environment variables
+	  so the build tools like the compiler and linker and their support libraries are found.
+	
+	  3. The compile phase gathers all the source files and calls the CL compiler task for
+	  those that need to be rebuilt.
+	  
+	  4. The linking phase gathers all the object files that were generated in the compile phase
+	  and relinks them all into a new target executable or library.
+	
+	There are also different build types:
+	
+	  1. Applications
+	  2. Dynamic Library (DLLs/Windows; SOs/Linux)
+	  3. Static Library (.lib/Windows; .a/Linux)
+	-->
+	
+	<!-- The user can override the default build folders by setting these variables explicitly
+	in the project.
+	
+		$(BuildObjectsFolder) - Contains all the temporary object files created by the compiler
+		$(BuildLibraryFolder) - Contains the libraries that are produced by the library tool.
+		$(BuildExecutableFolder) - Contains the final executable linked with all the libraries.
+		
+	If they are not set here, we give them default values.
+	-->
+	
+	<PropertyGroup>
+		<BuildObjectsFolder Condition="'$(BuildObjectsFolder)' == ''">obj</BuildObjectsFolder>
+		<BuildLibraryFolder Condition="'$(BuildLibraryFolder)' == ''">lib</BuildLibraryFolder>
+		<BuildExecutableFolder Condition="'$(BuildExecutableFolder)' == ''">bin</BuildExecutableFolder>
+	</PropertyGroup>
+	
+	<PropertyGroup>
+		<BuildTemporaryFolders Condition="'$(BuildTemporaryFolders)' == ''">
+			$(BuildObjectsFolder);
+			$(BuildLibraryFolder);
+			$(BuildExecutableFolder)
+		</BuildTemporaryFolders>
+	</PropertyGroup>
+	
+	<!-- Clean Phase -->
+	
+	<PropertyGroup>
+		<BuildObjectsExtension Condition="'$(BuildObjectsExtension)' == ''">obj</BuildObjectsExtension>
+		<BuildLibraryExtension Condition="'$(BuildLibraryExtension)' == ''">lib</BuildLibraryExtension>
+		<BuildExecutableExtension Condition="'$(BuildExecutableExtension)' == ''">exe</BuildExecutableExtension>
+	</PropertyGroup>
+	
+	<PropertyGroup>
+		<BuildCleanPatterns Condition="'$(BuildCleanPatterns)' == ''">
+			*.$(BuildObjectsExtension);
+			*.$(BuildLibraryExtension);
+			*.$(BuildExecutableExtension)
+		</BuildCleanPatterns>
+	</PropertyGroup>
+	
+	<Target Name="BuildClean">
+		<CPPClean
+			DoDelete="true"
+			FilePatternsToDeleteOnClean="$(BuildCleanPatterns)"
+			FoldersToClean="$(BuildTemporaryFolders)"/>
+	</Target>
+	
+	<!--  Prepare Phase  -->
+	
+	<Target Name="BuildPrepare">
+		<MakeDir Directories='$(BuildTemporaryFolders)'/>
+	</Target>
+	
+	<!--  Setup Phase  -->
+	
+	<Target Name="BuildSetup" DependsOnTargets="$(BuildSetupDependsOn)">
+	</Target>
+	
+	<!--  Compile Phase  -->
+	
+	<Target
+		Name="BuildCompile"
+		Inputs="@(ClCompile);@(ClInclude)"
+		Outputs="@(ClCompile->'$(BuildObjectsFolder)\%(Filename).$(BuildObjectsExtension)')"
+		DependsOnTargets="$(BuildCompileDependsOn)">
+		<CL
+			Sources = "@(ClCompile)"
+			BuildObjectsFolder = "$(BuildObjectsFolder)"
+			
+			AdditionalIncludeDirectories       ="%(ClCompile.AdditionalIncludeDirectories)"
+			AdditionalOptions                  ="%(ClCompile.AdditionalOptions)"
+			AdditionalUsingDirectories         ="%(ClCompile.AdditionalUsingDirectories)"
+			BrowseInformation                  ="%(ClCompile.BrowseInformation)"
+			CallingConvention                  ="%(ClCompile.CallingConvention)"
+			CompileAs                          ="%(ClCompile.CompileAs)"
+			DebugInformationFormat             ="%(ClCompile.DebugInformationFormat)"
+			DisableLanguageExtensions          ="%(ClCompile.DisableLanguageExtensions)"
+			DisableSpecificWarnings            ="%(ClCompile.DisableSpecificWarnings)"
+			EnableEnhancedInstructionSet       ="%(ClCompile.EnableEnhancedInstructionSet)"
+			ErrorReporting                     ="%(ClCompile.ErrorReporting)"
+			ExceptionHandling                  ="%(ClCompile.ExceptionHandling)"
+			ExcludedInputPaths                 ="$(ExcludePath)"
+			FavorSizeOrSpeed                   ="%(ClCompile.FavorSizeOrSpeed)"
+			FloatingPointExceptions            ="%(ClCompile.FloatingPointExceptions)"
+			FloatingPointModel                 ="%(ClCompile.FloatingPointModel)"
+			ForcedIncludeFiles                 ="%(ClCompile.ForcedIncludeFiles)"
+			ForcedUsingFiles                   ="%(ClCompile.ForcedUsingFiles)"
+			FunctionLevelLinking               ="%(ClCompile.FunctionLevelLinking)"
+			IgnoreStandardIncludePath          ="%(ClCompile.IgnoreStandardIncludePath)"
+			InlineFunctionExpansion            ="%(ClCompile.InlineFunctionExpansion)"
+			IntrinsicFunctions                 ="%(ClCompile.IntrinsicFunctions)"
+			MinimalRebuild                     ="%(ClCompile.MinimalRebuild)"
+			MultiProcessorCompilation          ="%(ClCompile.MultiProcessorCompilation)"
+			ObjectFileName                     ="%(ClCompile.ObjectFileName)"
+			OmitDefaultLibName                 ="%(ClCompile.OmitDefaultLibName)"
+			OmitFramePointers                  ="%(ClCompile.OmitFramePointers)"
+			OpenMPSupport                      ="%(ClCompile.OpenMPSupport)"
+			Optimization                       ="%(ClCompile.Optimization)"
+			PrecompiledHeader                  ="%(ClCompile.PrecompiledHeader)"
+			PrecompiledHeaderFile              ="%(ClCompile.PrecompiledHeaderFile)"
+			PrecompiledHeaderOutputFile        ="%(ClCompile.PrecompiledHeaderOutputFile)"
+			ProgramDataBaseFileName            ="%(ClCompile.ProgramDataBaseFileName)"
+			RuntimeLibrary                     ="%(ClCompile.RuntimeLibrary)"
+			RuntimeTypeInfo                    ="%(ClCompile.RuntimeTypeInfo)"
+			ShowIncludes                       ="%(ClCompile.ShowIncludes)"
+			SmallerTypeCheck                   ="%(ClCompile.SmallerTypeCheck)"
+			StringPooling                      ="%(ClCompile.StringPooling)"
+			StructMemberAlignment              ="%(ClCompile.StructMemberAlignment)"
+			SuppressStartupBanner              ="%(ClCompile.SuppressStartupBanner)"
+			TreatSpecificWarningsAsErrors      ="%(ClCompile.TreatSpecificWarningsAsErrors)"
+			TreatWarningAsError                ="%(ClCompile.TreatWarningAsError)"
+			TreatWChar_tAsBuiltInType          ="%(ClCompile.TreatWChar_tAsBuiltInType)"
+			UndefineAllPreprocessorDefinitions ="%(ClCompile.UndefineAllPreprocessorDefinitions)"
+			UndefinePreprocessorDefinitions    ="%(ClCompile.UndefinePreprocessorDefinitions)"
+			WarningLevel                       ="%(ClCompile.WarningLevel)"
+			WholeProgramOptimization           ="%(ClCompile.WholeProgramOptimization)"
+
+			ToolExe                            ="$(CLToolExe)"
+			ToolPath                           ="$(CLToolPath)"
+			TrackFileAccess                    ="$(TrackFileAccess)"
+			MinimalRebuildFromTracking         ="%(ClCompile.MinimalRebuildFromTracking)"
+			ToolArchitecture                   ="$(CLToolArchitecture)" />
+	</Target>
+	
+	<!--  Link Phase  -->
+	
+	<Target
+		Name="BuildLink"
+		Inputs="@(Link);"
+		Outputs="$(TargetExe)"
+		DependsOnTargets="$(BuildLinkDependsOn)">
+		<Link />
+	</Target>
+	
+	<!--  General Build  -->
+	
+	<PropertyGroup>
+		<BuildTargets Condition="'$(BuildTargets)' == ''">
+			BuildPrepare;
+			BuildSetup;
+			BuildCompile;
+			BuildLink;
+		</BuildTargets>
+	</PropertyGroup>
+	
+	<PropertyGroup>
+		<BuildDependsOn Condition="'$(BuildDependsOn)' == ''">
+			$(BuildTargets);
+		</BuildDependsOn>
+	</PropertyGroup>
+	
+	<PropertyGroup>
+		<BuildCleanDependsOn Condition="'$(BuildCleanDependsOn)' == ''">
+			BuildClean;
+		</BuildCleanDependsOn>
+	</PropertyGroup>
+	
+	<Target 
+		Name="Build"
+		DependsOnTargets="$(BuildDependsOn)">
+	</Target>
+	
+	<Target 
+		Name="Clean"
+		DependsOnTargets="$(BuildCleanDependsOn)">
+	</Target>
+	
+</Project>
