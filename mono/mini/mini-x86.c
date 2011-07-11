@@ -2214,7 +2214,8 @@ emit_move_return_value (MonoCompile *cfg, MonoInst *ins, guint8 *code)
 	case OP_FCALL_REG:
 	case OP_FCALL_MEMBASE:
 		if (X86_USE_SSE_FP(cfg)) {
-			if (cfg->method->wrapper_type == MONO_WRAPPER_MANAGED_TO_NATIVE) {
+			MonoCallInst *call = (MonoCallInst*)ins;
+			if (call->signature->pinvoke) {// || cfg->method->wrapper_type == MONO_WRAPPER_MANAGED_TO_NATIVE) {
 				x86_fst_membase (code, X86_ESP, -8, TRUE, TRUE);
 				x86_sse_movsd_reg_membase (code, ins->dreg, X86_ESP, -8);
 			} else if (ins->dreg != X86_XMM0) {
