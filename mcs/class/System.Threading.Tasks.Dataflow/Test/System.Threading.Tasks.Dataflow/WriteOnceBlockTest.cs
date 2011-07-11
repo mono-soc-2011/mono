@@ -1,6 +1,6 @@
 #if NET_4_0
 // 
-// BroadcastBlockTest.cs
+// WriteOnceBlockTest.cs
 //  
 // Author:
 //       Jérémie "garuma" Laval <jeremie.laval@gmail.com>

@@ -38,7 +38,6 @@ namespace System.Threading.Tasks.Dataflow
 		CompletionHelper compHelper = CompletionHelper.GetNew ();
 		BlockingCollection<T> messageQueue = new BlockingCollection<T> ();
 		MessageBox<T> messageBox;
-		T blockValue;
 		AtomicBooleanValue written;
 		MessageVault<T> vault;
 		DataflowBlockOptions dataflowBlockOptions;
