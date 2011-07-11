@@ -66,6 +66,7 @@
     <Compile Include="..\Microsoft.Build.Utilities\Mono.XBuild.Utilities\MSBuildUtils.cs" />
     <Compile Include="..\Microsoft.Build.Engine\Microsoft.Build.BuildEngine\DirectoryScanner.cs" />
     <Compile Include="Assembly\AssemblyInfo.cs" />
+    <Compile Include="Microsoft.Build.Tasks.Cpp\SetEnv.cs" />
     <Compile Include="Microsoft.Build.Tasks.Cpp\ToolTaskExtension.cs" />
     <Compile Include="Microsoft.Build.Tasks.Cpp\VCMessage.cs" />
     <Compile Include="Microsoft.Build.Tasks.Cpp\CPPClean.cs" />
@@ -83,6 +84,9 @@
   <PropertyGroup>
     <PreBuildEvent>
     </PreBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PostBuildEvent>COPY "C:\Users\Triton\Development\mono-gsoc\mcs\class\Microsoft.Build.Tasks.Cpp\obj\Debug\Microsoft.Build.Tasks.Cpp.v4.0*" "C:\Program Files\Mono-2.10.2\lib\mono\xbuild"</PostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="mscorlib.dll">
