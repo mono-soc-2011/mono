@@ -50,6 +50,14 @@ namespace Microsoft.Build.Tasks.Cpp {
 			if (Bag["SuppressStartupBanner"] != null)
 				commandLine.AppendSwitch("/NoLogo");
 
+			commandLine.AppendSwitch("/c");
+
+			if (Bag["BuildObjectsFolder"] != null) {
+				string objFile = Path.GetFileNameWithoutExtension(Sources[0].ItemSpec);
+				string objPath = Path.Combine(BuildObjectsFolder, objFile);
+				commandLine.AppendSwitch("/Fo" + objPath);
+			}
+
 			if (Bag["AdditionalIncludeDirectories"] != null) {
 				foreach (string inc in AdditionalIncludeDirectories) {
 					commandLine.AppendSwitch("/I " + inc);
@@ -183,6 +191,12 @@ namespace Microsoft.Build.Tasks.Cpp {
 		public string BasicRuntimeChecks {
 			get { return (string)Bag["BasicRuntimeChecks"]; }
 			set { Bag["BasicRuntimeChecks"] = value; }
+		}
+
+		public string BuildObjectsFolder
+		{
+			get { return (string)Bag["BuildObjectsFolder"]; }
+			set { Bag["BuildObjectsFolder"] = value; }
 		}
 
 		public bool BrowseInformation {
