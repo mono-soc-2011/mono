@@ -148,6 +148,18 @@ namespace System.Threading.Tasks.Dataflow
 				return compHelper.Completion;
 			}
 		}
+
+		public int OutputCount {
+			get {
+				return unprocessedData.Count;
+			}
+		}
+
+		public int InputCount {
+			get {
+				return messageQueue.Count;
+			}
+		}
 	}
 }
 
