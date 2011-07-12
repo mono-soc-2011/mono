@@ -107,7 +107,7 @@ namespace System.Threading.Tasks.Dataflow
 			ITargetBlock<TOutput> target;
 			TInput input;
 
-			while (messageQueue.TryTake (out input) && (target = targets.Current) != null)
+			while ((target = targets.Current) != null && messageQueue.TryTake (out input))
 				foreach (var item in transformer (input))
 					target.OfferMessage (messageBox.GetNextHeader (), item, this, false);
 		}

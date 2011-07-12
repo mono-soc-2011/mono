@@ -109,7 +109,7 @@ namespace System.Threading.Tasks.Dataflow
 			ITargetBlock<TOutput> target;
 			TInput input;
 
-			while (messageQueue.TryTake (out input) && (target = targets.Current) != null)
+			while ((target = targets.Current) != null && messageQueue.TryTake (out input))
 				target.OfferMessage (messageBox.GetNextHeader (), transformer (input), this, false);
 		}
 
