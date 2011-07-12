@@ -42,8 +42,7 @@ namespace System.Threading.Tasks.Dataflow
 		MessageVault<TOutput> vault;
 		ExecutionDataflowBlockOptions dataflowBlockOptions;
 		readonly Func<TInput, TOutput> transformer;
-
-		// With each call to LinkTo, targets get added and when the current one is disposed, the next in line is activated
+		ConcurrentQueue<TOutput> unprocessedData = new ConcurrentQueue<TOutput> ();
 		TargetBuffer<TOutput> targets = new TargetBuffer<TOutput> ();
 
 		public TransformBlock (Func<TInput, TOutput> transformer) : this (transformer, defaultOptions)
@@ -72,7 +71,9 @@ namespace System.Threading.Tasks.Dataflow
 
 		public IDisposable LinkTo (ITargetBlock<TOutput> target, bool unlinkAfterOne)
 		{
-			return targets.AddTarget (target, unlinkAfterOne);
+			var result = targets.AddTarget (target, unlinkAfterOne);
+			ProcessData (target);
+			return result;
 		}
 
 		public TOutput ConsumeMessage (DataflowMessageHeader messageHeader, ITargetBlock<TOutput> target, out bool messageConsumed)
@@ -109,8 +110,27 @@ namespace System.Threading.Tasks.Dataflow
 			ITargetBlock<TOutput> target;
 			TInput input;
 
-			while ((target = targets.Current) != null && messageQueue.TryTake (out input))
-				target.OfferMessage (messageBox.GetNextHeader (), transformer (input), this, false);
+			while (messageQueue.TryTake (out input)) {
+				TOutput output = transformer (input);
+
+				if ((target = targets.Current) != null)
+					target.OfferMessage (messageBox.GetNextHeader (), output, this, false);
+				else
+					unprocessedData.Enqueue (output);
+			}
+
+			if (!unprocessedData.IsEmpty && (target = targets.Current) != null)
+				ProcessData (target);
+		}
+
+		void ProcessData (ITargetBlock<TOutput> target)
+		{
+			if (target == null)
+				return;
+
+			TOutput output;
+			while (unprocessedData.TryDequeue (out output))
+				target.OfferMessage (messageBox.GetNextHeader (), output, this, false);
 		}
 
 		public void Complete ()

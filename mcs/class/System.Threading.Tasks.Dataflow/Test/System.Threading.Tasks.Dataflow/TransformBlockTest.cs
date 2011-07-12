@@ -53,6 +53,23 @@ namespace MonoTests.System.Threading.Tasks.Dataflow
 
 			CollectionAssert.AreEqual (new int[] { 0, -1, -2, -3, -4, -5, -6, -7, -8, -9 }, array);
 		}
+
+		[Test]
+		public void DeferredUsageTest ()
+		{
+			int[] array = new int[10];
+			ActionBlock<int> action = new ActionBlock<int> ((i) => array[Math.Abs (i)] = i);
+			TransformBlock<int, int> block = new TransformBlock<int, int> (i => -i);
+
+			for (int i = 0; i < array.Length; ++i)
+				Assert.IsTrue (block.Post (i), "Not accepted");
+
+			Thread.Sleep (1300);
+			block.LinkTo (action);
+			Thread.Sleep (600);
+
+			CollectionAssert.AreEqual (new int[] { 0, -1, -2, -3, -4, -5, -6, -7, -8, -9 }, array);
+		}
 	}
 }
 #endif
