@@ -1,6 +1,7 @@
 System.Threading.Tasks.Dataflow/ActionBlockTest.cs
 System.Threading.Tasks.Dataflow/BufferBlockTest.cs
 System.Threading.Tasks.Dataflow/TransformBlockTest.cs
+System.Threading.Tasks.Dataflow/TransformManyBlockTest.cs
 System.Threading.Tasks.Dataflow/BroadcastBlockTest.cs
 System.Threading.Tasks.Dataflow/WriteOnceBlockTest.cs
 System.Threading.Tasks.Dataflow/BatchBlockTest.cs

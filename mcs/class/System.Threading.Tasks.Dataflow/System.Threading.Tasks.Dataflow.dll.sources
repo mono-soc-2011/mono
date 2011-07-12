@@ -15,6 +15,7 @@ System.Threading.Tasks.Dataflow/CompletionHelper.cs
 System.Threading.Tasks.Dataflow/ActionBlock.cs
 System.Threading.Tasks.Dataflow/BufferBlock.cs
 System.Threading.Tasks.Dataflow/TransformBlock.cs
+System.Threading.Tasks.Dataflow/TransformManyBlock.cs
 System.Threading.Tasks.Dataflow/BroadcastBlock.cs
 System.Threading.Tasks.Dataflow/WriteOnceBlock.cs
 System.Threading.Tasks.Dataflow/BatchBlock.cs
