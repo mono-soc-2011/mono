@@ -129,6 +129,12 @@ namespace System.Threading.Tasks.Dataflow
 				return compHelper.Completion;
 			}
 		}
+
+		public int Count {
+			get {
+				return messageQueue.Count;
+			}
+		}
 	}
 }
 

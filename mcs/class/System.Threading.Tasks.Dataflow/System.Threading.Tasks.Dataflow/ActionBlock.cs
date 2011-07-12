@@ -41,7 +41,6 @@ namespace System.Threading.Tasks.Dataflow
 		Action<TInput> action;
 		ExecutionDataflowBlockOptions dataflowBlockOptions;
 
-		readonly Action processQueue;
 
 		public ActionBlock (Action<TInput> action) : this (action, defaultOptions)
 		{
@@ -57,8 +56,7 @@ namespace System.Threading.Tasks.Dataflow
 
 			this.action = action;
 			this.dataflowBlockOptions = dataflowBlockOptions;
-			this.processQueue = ProcessQueue;
-			this.messageBox = new ExecutingMessageBox<TInput> (messageQueue, compHelper, processQueue, dataflowBlockOptions);
+			this.messageBox = new ExecutingMessageBox<TInput> (messageQueue, compHelper, ProcessQueue, dataflowBlockOptions);
 		}
 
 		public ActionBlock (Func<TInput, Task> action) : this (action, defaultOptions)
@@ -99,6 +97,12 @@ namespace System.Threading.Tasks.Dataflow
 		public Task Completion {
 			get {
 				return compHelper.Completion;
+			}
+		}
+
+		public int InputCount {
+			get {
+				return messageQueue.Count;
 			}
 		}
 	}
