@@ -19,7 +19,9 @@ System.Threading.Tasks.Dataflow/TransformManyBlock.cs
 System.Threading.Tasks.Dataflow/BroadcastBlock.cs
 System.Threading.Tasks.Dataflow/WriteOnceBlock.cs
 System.Threading.Tasks.Dataflow/BatchBlock.cs
+System.Threading.Tasks.Dataflow/JoinBlock.cs
 System.Threading.Tasks.Dataflow/ExecutionDataflowBlockOptions.cs
+System.Threading.Tasks.Dataflow/GroupingDataflowBlockOptions.cs
 System.Threading.Tasks.Dataflow/AtomicBoolean.cs
 System.Threading.Tasks.Dataflow/MessageBox.cs
 System.Threading.Tasks.Dataflow/ExecutingMessageBox.cs
