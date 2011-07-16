@@ -3418,7 +3418,11 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 				if ((d == 0.0) && (mono_signbit (d) == 0)) {
 					x86_sse_xorpd_reg_reg (code, ins->dreg, ins->dreg);
 				} else {
-					x86_sse_movsd_reg_mem (code, ins->dreg, ins->inst_p0);
+					guint32 *val = (guint32*)&d;
+					x86_push_imm (code, val [1]);
+					x86_push_imm (code, val [0]);
+					x86_sse_movsd_reg_membase (code, ins->dreg, X86_ESP, 0);
+					x86_alu_reg_imm (code, X86_ADD, X86_ESP, 8);
 				}
 				break;
 			}
@@ -3447,9 +3451,13 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			if (X86_USE_SSE_FP(cfg)) {
 				if ((f == 0.0) && (mono_signbit (f) == 0)) {
 					x86_sse_xorpd_reg_reg (code, ins->dreg, ins->dreg);
-				} else {
-					x86_sse_movss_reg_mem (code, ins->dreg, ins->inst_p0);
-					x86_sse_cvtss2sd_reg_reg (code, ins->dreg, ins->dreg);
+				} else if (cfg->compile_aot) {
+					guint32 val = *(guint32*)&f;
+					x86_push_imm (code, val);
+					x86_sse_cvtss2sd_reg_membase (code, ins->dreg, X86_ESP, 0);
+					x86_alu_reg_imm (code, X86_ADD, X86_ESP, 4);
+				} else {				
+					x86_sse_cvtss2sd_reg_mem (code, ins->dreg, ins->inst_p0);
 				}
 				break;
 			}

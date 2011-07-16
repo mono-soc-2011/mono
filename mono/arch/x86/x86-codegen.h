@@ -2471,6 +2471,8 @@ typedef enum {
 
 #define x86_sse_cvtss2sd_reg_membase(inst,dreg,basereg,disp) emit_sse_reg_membase ((inst), (dreg), (basereg), (disp), 0xf3, 0x0f, 0x5a)
 
+#define x86_sse_cvtss2sd_reg_mem(inst,dreg,mem) emit_sse_reg_mem ((inst), (dreg), (mem), 0xf3, 0x0f, 0x5a)
+
 #define x86_sse_cvtsd2ss_reg_reg(inst,dreg,reg) emit_sse_reg_reg ((inst), (dreg), (reg), 0xf2, 0x0f, 0x5a)
 
 #define x86_sse_cvtss2sd_reg_reg(inst,dreg,reg) emit_sse_reg_reg ((inst), (dreg), (reg), 0xf3, 0x0f, 0x5a)
