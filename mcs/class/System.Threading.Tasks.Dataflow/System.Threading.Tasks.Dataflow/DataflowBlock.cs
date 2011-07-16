@@ -32,14 +32,22 @@ namespace System.Threading.Tasks.Dataflow
 {
 	public static class DataflowBlock
 	{
+		static DataflowMessageHeader globalHeader = new DataflowMessageHeader ();
+
 		public static IObservable<TOutput> AsObservable<TOutput> (this ISourceBlock<TOutput> source)
 		{
-			throw new NotImplementedException ();
+			if (source == null)
+				throw new ArgumentNullException ("source");
+
+			return new ObservableDataflowBlock<TOutput> (source);
 		}
 
 		public static IObserver<TInput> AsObserver<TInput> (this ITargetBlock<TInput> target)
 		{
-			throw new NotImplementedException ();
+			if (target == null)
+				throw new ArgumentNullException ("target");
+
+			return new ObserverDataflowBlock<TInput> (target);
 		}
 
 		public static Task<int> Choose<T1, T2> (ISourceBlock<T1> source1, Action<T1> action1, ISourceBlock<T2> source2, Action<T2> action2)
@@ -110,7 +118,7 @@ namespace System.Threading.Tasks.Dataflow
 			if (target == null)
 				throw new ArgumentNullException ("target");
 
-			return target.OfferMessage (new DataflowMessageHeader (1), item, null, false) == DataflowMessageStatus.Accepted;
+			return target.OfferMessage (globalHeader.Increment (), item, null, false) == DataflowMessageStatus.Accepted;
 		}
 
 		public static TOutput Receive<TOutput> (this ISourceBlock<TOutput> source)
