@@ -52,7 +52,7 @@ namespace System.Threading.Tasks.Dataflow
 
 		public static Task<int> Choose<T1, T2> (ISourceBlock<T1> source1, Action<T1> action1, ISourceBlock<T2> source2, Action<T2> action2)
 		{
-			return Choose (source1, action1, source2, action2, DataflowBlockOptions.Unbounded);
+			return Choose<T1, T2> (source1, action1, source2, action2, new DataflowBlockOptions ());
 		}
 
 		public static Task<int> Choose<T1, T2> (ISourceBlock<T1> source1,
@@ -61,7 +61,16 @@ namespace System.Threading.Tasks.Dataflow
 		                                        Action<T2> action2,
 		                                        DataflowBlockOptions dataflowBlockOptions)
 		{
-			throw new NotImplementedException ();
+			if (source1 == null)
+				throw new ArgumentNullException ("source1");
+			if (source2 == null)
+				throw new ArgumentNullException ("source2");
+
+			var chooser = new ChooserBlock<T1, T2, object> (action1, action2, null, dataflowBlockOptions);
+			source1.LinkTo (chooser.Target1);
+			source2.LinkTo (chooser.Target2);
+
+			return chooser.Completion;
 		}
 
 		public static Task<int> Choose<T1, T2, T3> (ISourceBlock<T1> source1,
@@ -71,7 +80,7 @@ namespace System.Threading.Tasks.Dataflow
 		                                            ISourceBlock<T3> source3,
 		                                            Action<T3> action3)
 		{
-			return Choose (source1, action1, source2, action2, source3, action3, DataflowBlockOptions.Unbounded);
+			return Choose (source1, action1, source2, action2, source3, action3, new DataflowBlockOptions ());
 		}
 
 		public static Task<int> Choose<T1, T2, T3> (ISourceBlock<T1> source1,
@@ -82,12 +91,24 @@ namespace System.Threading.Tasks.Dataflow
 		                                            Action<T3> action3,
 		                                            DataflowBlockOptions dataflowBlockOptions)
 		{
-			throw new NotImplementedException ();		
+			if (source1 == null)
+				throw new ArgumentNullException ("source1");
+			if (source2 == null)
+				throw new ArgumentNullException ("source2");
+			if (source3 == null)
+				throw new ArgumentNullException ("source3");
+
+			var chooser = new ChooserBlock<T1, T2, T3> (action1, action2, action3, dataflowBlockOptions);
+			source1.LinkTo (chooser.Target1);
+			source2.LinkTo (chooser.Target2);
+			source3.LinkTo (chooser.Target3);
+
+			return chooser.Completion;
 		}
 
 		public static IPropagatorBlock<TInput, TOutput> Encapsulate<TInput, TOutput> (ITargetBlock<TInput> target, ISourceBlock<TOutput> source)
 		{
-			throw new NotImplementedException ();
+			return new PropagatorWrapperBlock<TInput, TOutput> (target, source);
 		}
 
 		public static IDisposable LinkTo<TOutput> (this ISourceBlock<TOutput> source, ITargetBlock<TOutput> target)

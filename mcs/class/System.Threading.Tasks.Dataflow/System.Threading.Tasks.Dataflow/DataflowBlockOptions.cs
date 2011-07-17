@@ -31,7 +31,7 @@ namespace System.Threading.Tasks.Dataflow
 {
 	public class DataflowBlockOptions
 	{
-		public readonly static DataflowBlockOptions Unbounded = new DataflowBlockOptions ();
+		public readonly static int Unbounded = -1;
 
 		public DataflowBlockOptions ()
 		{

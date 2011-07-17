@@ -30,3 +30,5 @@ System.Threading.Tasks.Dataflow/PassingMessageBox.cs
 System.Threading.Tasks.Dataflow/MessageVault.cs
 System.Threading.Tasks.Dataflow/ObservableDataflowBlock.cs
 System.Threading.Tasks.Dataflow/ObserverDataflowBlock.cs
+System.Threading.Tasks.Dataflow/PropagatorWrapperBlock.cs
+System.Threading.Tasks.Dataflow/ChooserBlock.cs
