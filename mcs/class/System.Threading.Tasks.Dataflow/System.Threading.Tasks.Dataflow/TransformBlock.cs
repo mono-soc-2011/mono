@@ -36,14 +36,15 @@ namespace System.Threading.Tasks.Dataflow
 	{
 		static readonly ExecutionDataflowBlockOptions defaultOptions = new ExecutionDataflowBlockOptions ();
 
+		ExecutionDataflowBlockOptions dataflowBlockOptions;
 		CompletionHelper compHelper = CompletionHelper.GetNew ();
 		BlockingCollection<TInput> messageQueue = new BlockingCollection<TInput> ();
 		MessageBox<TInput> messageBox;
 		MessageVault<TOutput> vault;
-		ExecutionDataflowBlockOptions dataflowBlockOptions;
-		readonly Func<TInput, TOutput> transformer;
-		ConcurrentQueue<TOutput> unprocessedData = new ConcurrentQueue<TOutput> ();
+		MessageOutgoingQueue<TOutput> outgoing = new MessageOutgoingQueue<TOutput> ();
 		TargetBuffer<TOutput> targets = new TargetBuffer<TOutput> ();
+		DataflowMessageHeader headers = DataflowMessageHeader.NewValid ();
+		readonly Func<TInput, TOutput> transformer;
 
 		public TransformBlock (Func<TInput, TOutput> transformer) : this (transformer, defaultOptions)
 		{
@@ -72,7 +73,7 @@ namespace System.Threading.Tasks.Dataflow
 		public IDisposable LinkTo (ITargetBlock<TOutput> target, bool unlinkAfterOne)
 		{
 			var result = targets.AddTarget (target, unlinkAfterOne);
-			ProcessData (target);
+			outgoing.ProcessForTarget (target, this, false, ref headers);
 			return result;
 		}
 
@@ -93,16 +94,12 @@ namespace System.Threading.Tasks.Dataflow
 
 		public bool TryReceive (Predicate<TOutput> filter, out TOutput item)
 		{
-			// TODO
-			item = default(TOutput);
-			return false;
+			return outgoing.TryReceive (filter, out item);
 		}
 
 		public bool TryReceiveAll (out IList<TOutput> items)
 		{
-			// TODO
-			items = null;
-			return false;
+			return outgoing.TryReceiveAll (out items);
 		}
 
 		void TransformProcess ()
@@ -114,23 +111,13 @@ namespace System.Threading.Tasks.Dataflow
 				TOutput output = transformer (input);
 
 				if ((target = targets.Current) != null)
-					target.OfferMessage (messageBox.GetNextHeader (), output, this, false);
+					target.OfferMessage (headers.Increment (), output, this, false);
 				else
-					unprocessedData.Enqueue (output);
+					outgoing.AddData (output);
 			}
 
-			if (!unprocessedData.IsEmpty && (target = targets.Current) != null)
-				ProcessData (target);
-		}
-
-		void ProcessData (ITargetBlock<TOutput> target)
-		{
-			if (target == null)
-				return;
-
-			TOutput output;
-			while (unprocessedData.TryDequeue (out output))
-				target.OfferMessage (messageBox.GetNextHeader (), output, this, false);
+			if (!outgoing.IsEmpty && (target = targets.Current) != null)
+				outgoing.ProcessForTarget (target, this, false, ref headers);
 		}
 
 		public void Complete ()
@@ -151,7 +138,7 @@ namespace System.Threading.Tasks.Dataflow
 
 		public int OutputCount {
 			get {
-				return unprocessedData.Count;
+				return outgoing.Count;
 			}
 		}
 

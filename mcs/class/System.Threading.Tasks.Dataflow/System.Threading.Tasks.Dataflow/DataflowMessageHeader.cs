@@ -56,6 +56,11 @@ namespace System.Threading.Tasks.Dataflow
 			return new DataflowMessageHeader (Interlocked.Increment (ref id));
 		}
 
+		internal static DataflowMessageHeader NewValid ()
+		{
+			return new DataflowMessageHeader (1);
+		}
+
 		public override bool Equals (object obj)
 		{
 			return obj is DataflowMessageHeader ? Equals ((DataflowMessageHeader)obj) : false;

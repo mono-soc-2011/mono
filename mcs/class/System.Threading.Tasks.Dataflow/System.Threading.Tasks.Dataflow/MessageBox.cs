@@ -38,7 +38,6 @@ namespace System.Threading.Tasks.Dataflow
 	{
 		readonly CompletionHelper compHelper;
 		readonly BlockingCollection<TInput> messageQueue = new BlockingCollection<TInput> ();
-		DataflowMessageHeader header = new DataflowMessageHeader (1);
 
 		public MessageBox (BlockingCollection<TInput> messageQueue, CompletionHelper compHelper)
 		{
@@ -87,11 +86,6 @@ namespace System.Threading.Tasks.Dataflow
 			messageQueue.CompleteAdding ();
 			if (messageQueue.IsCompleted)
 				compHelper.Complete ();
-		}
-
-		public DataflowMessageHeader GetNextHeader ()
-		{
-			return header.Increment ();
 		}
 	}
 }

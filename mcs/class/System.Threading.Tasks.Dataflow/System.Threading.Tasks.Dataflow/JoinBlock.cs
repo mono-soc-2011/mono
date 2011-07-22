@@ -39,12 +39,12 @@ namespace System.Threading.Tasks.Dataflow
 		GroupingDataflowBlockOptions dataflowBlockOptions;
 		TargetBuffer<Tuple<T1, T2>> targets = new TargetBuffer<Tuple<T1, T2>> ();
 		MessageVault<Tuple<T1, T2>> vault = new MessageVault<Tuple<T1, T2>> ();
-		ConcurrentQueue<Tuple<T1, T2>> outgoing = new ConcurrentQueue<Tuple<T1, T2>> ();
+		MessageOutgoingQueue<Tuple<T1, T2>> outgoing = new MessageOutgoingQueue<Tuple<T1, T2>> ();
 
 		JoinTarget<T1> target1;
 		JoinTarget<T2> target2;
 
-		DataflowMessageHeader header;
+		DataflowMessageHeader headers;
 
 		public JoinBlock () : this (defaultOptions)
 		{
@@ -64,7 +64,7 @@ namespace System.Threading.Tasks.Dataflow
 		public IDisposable LinkTo (ITargetBlock<Tuple<T1, T2>> target, bool unlinkAfterOne)
 		{
 			var result = targets.AddTarget (target, unlinkAfterOne);
-			ProcessOutgoing (target);
+			outgoing.ProcessForTarget (target, this, false, ref headers);
 			return result;
 		}
 
@@ -135,24 +135,18 @@ namespace System.Threading.Tasks.Dataflow
 		{
 			Tuple<T1, T2> tuple = Tuple.Create (val1, val2);
 			ITargetBlock<Tuple<T1, T2>> target = targets.Current;
-			if (target == null) {
-				outgoing.Enqueue (tuple);
-				return;
-			}
-			target.OfferMessage (header.Increment (),
-			                     tuple,
-			                     this,
-			                     false);
-		}
 
-		void ProcessOutgoing (ITargetBlock<Tuple<T1, T2>> target)
-		{
-			Tuple<T1, T2> tuple;
-			while (outgoing.TryDequeue (out tuple))
-				target.OfferMessage (header.Increment (),
+			if (target == null) {
+				outgoing.AddData (tuple);
+			} else {
+				target.OfferMessage (headers.Increment (),
 				                     tuple,
 				                     this,
 				                     false);
+			}
+
+			if (!outgoing.IsEmpty && (target = targets.Current) != null)
+				outgoing.ProcessForTarget (target, this, false, ref headers);
 		}
 
 		class JoinTarget<TTarget> : MessageBox<TTarget>, ITargetBlock<TTarget>

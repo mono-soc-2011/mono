@@ -42,9 +42,9 @@ namespace System.Threading.Tasks.Dataflow
 		DataflowBlockOptions dataflowBlockOptions;
 		readonly int batchSize;
 		int batchCount;
-		ConcurrentQueue<T[]> unprocessedBatch = new ConcurrentQueue<T[]> ();
-
+		MessageOutgoingQueue<T[]> outgoing = new MessageOutgoingQueue<T[]> ();
 		TargetBuffer<T[]> targets = new TargetBuffer<T[]> ();
+		DataflowMessageHeader headers = DataflowMessageHeader.NewValid ();
 
 		public BatchBlock (int batchSize) : this (batchSize, defaultOptions)
 		{
@@ -73,7 +73,7 @@ namespace System.Threading.Tasks.Dataflow
 		public IDisposable LinkTo (ITargetBlock<T[]> target, bool unlinkAfterOne)
 		{
 			var result = targets.AddTarget (target, unlinkAfterOne);
-			ProcessWaitingBatch (target);
+			outgoing.ProcessForTarget (target, this, false, ref headers);
 
 			return result;
 		}
@@ -141,21 +141,12 @@ namespace System.Threading.Tasks.Dataflow
 				messageQueue.TryTake (out batch[i]);
 
 			if (target == null)
-				unprocessedBatch.Enqueue (batch);
+				outgoing.AddData (batch);
 			else
-				target.OfferMessage (messageBox.GetNextHeader (), batch, this, false);
+				target.OfferMessage (headers.Increment (), batch, this, false);
 
-			ProcessWaitingBatch (targets.Current);
-		}
-
-		void ProcessWaitingBatch (ITargetBlock<T[]> target)
-		{
-			if (target == null)
-				return;
-
-			T[] batch;
-			while (unprocessedBatch.TryDequeue (out batch))
-				target.OfferMessage (messageBox.GetNextHeader (), batch, this, false);
+			if (!outgoing.IsEmpty && targets.Current != null)
+				outgoing.ProcessForTarget (targets.Current, this, false, ref headers);
 		}
 
 		public void Complete ()
@@ -176,7 +167,7 @@ namespace System.Threading.Tasks.Dataflow
 
 		public int OutputCount {
 			get {
-				return unprocessedBatch.Count;
+				return outgoing.Count;
 			}
 		}
 	}

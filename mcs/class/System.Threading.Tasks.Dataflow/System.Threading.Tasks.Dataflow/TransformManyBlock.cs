@@ -42,8 +42,9 @@ namespace System.Threading.Tasks.Dataflow
 		MessageVault<TOutput> vault;
 		ExecutionDataflowBlockOptions dataflowBlockOptions;
 		readonly Func<TInput, IEnumerable<TOutput>> transformer;
-		ConcurrentQueue<TOutput> unprocessedData = new ConcurrentQueue<TOutput> ();
+		MessageOutgoingQueue<TOutput> outgoing = new MessageOutgoingQueue<TOutput> ();
 		TargetBuffer<TOutput> targets = new TargetBuffer<TOutput> ();
+		DataflowMessageHeader headers = DataflowMessageHeader.NewValid ();
 
 		public TransformManyBlock (Func<TInput, IEnumerable<TOutput>> transformer) : this (transformer, defaultOptions)
 		{
@@ -72,7 +73,7 @@ namespace System.Threading.Tasks.Dataflow
 		public IDisposable LinkTo (ITargetBlock<TOutput> target, bool unlinkAfterOne)
 		{
 			var result = targets.AddTarget (target, unlinkAfterOne);
-			ProcessData (target);
+			outgoing.ProcessForTarget (target, this, false, ref headers);
 			return result;
 		}
 
@@ -93,16 +94,12 @@ namespace System.Threading.Tasks.Dataflow
 
 		public bool TryReceive (Predicate<TOutput> filter, out TOutput item)
 		{
-			// TODO
-			item = default(TOutput);
-			return false;
+			return outgoing.TryReceive (filter, out item);
 		}
 
 		public bool TryReceiveAll (out IList<TOutput> items)
 		{
-			// TODO
-			items = null;
-			return false;
+			return outgoing.TryReceiveAll (out items);
 		}
 
 		void TransformProcess ()
@@ -113,24 +110,14 @@ namespace System.Threading.Tasks.Dataflow
 			while (messageQueue.TryTake (out input)) {
 				foreach (var item in transformer (input)) {
 					if ((target = targets.Current) != null)
-						target.OfferMessage (messageBox.GetNextHeader (), item, this, false);
+						target.OfferMessage (headers.Increment (), item, this, false);
 					else
-						unprocessedData.Enqueue (item);
+						outgoing.AddData (item);
 				}
 			}
 
-			if (!unprocessedData.IsEmpty && (target = targets.Current) != null)
-				ProcessData (target);
-		}
-
-		void ProcessData (ITargetBlock<TOutput> target)
-		{
-			if (target == null)
-				return;
-
-			TOutput output;
-			while (unprocessedData.TryDequeue (out output))
-				target.OfferMessage (messageBox.GetNextHeader (), output, this, false);
+			if (!outgoing.IsEmpty && (target = targets.Current) != null)
+				outgoing.ProcessForTarget (target, this, false, ref headers);
 		}
 
 		public void Complete ()
@@ -151,7 +138,7 @@ namespace System.Threading.Tasks.Dataflow
 
 		public int OutputCount {
 			get {
-				return unprocessedData.Count;
+				return outgoing.Count;
 			}
 		}
 

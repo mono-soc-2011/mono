@@ -35,14 +35,14 @@ namespace System.Threading.Tasks.Dataflow
 	{
 		static readonly DataflowBlockOptions defaultOptions = new DataflowBlockOptions ();
 
+		DataflowBlockOptions dataflowBlockOptions;
 		CompletionHelper compHelper = CompletionHelper.GetNew ();
-		BlockingCollection<T> messageQueue = new BlockingCollection<T> ();
 		MessageBox<T> messageBox;
 		MessageVault<T> vault;
-		DataflowBlockOptions dataflowBlockOptions;
-
-		// With each call to LinkTo, targets get added and when the current one is disposed, the next in line is activated
+		MessageOutgoingQueue<T> outgoing = new MessageOutgoingQueue<T> ();
+		BlockingCollection<T> messageQueue = new BlockingCollection<T> ();
 		TargetBuffer<T> targets = new TargetBuffer<T> ();
+		DataflowMessageHeader headers = DataflowMessageHeader.NewValid ();
 
 		public BufferBlock () : this (defaultOptions)
 		{
@@ -92,26 +92,28 @@ namespace System.Threading.Tasks.Dataflow
 
 		public bool TryReceive (Predicate<T> filter, out T item)
 		{
-			// TODO
-			item = default(T);
-			return false;
+			return outgoing.TryReceive (filter, out item);
 		}
 
 		public bool TryReceiveAll (out IList<T> items)
 		{
-			// TODO
-			items = null;
-			return false;
+			return outgoing.TryReceiveAll (out items);
 		}
 
 		void ProcessQueue ()
 		{
 			ITargetBlock<T> target;
-			if ((target = targets.Current) == null)
-				return;
 			T input;
-			while (messageQueue.TryTake (out input))
-				target.OfferMessage (messageBox.GetNextHeader (), input, this, false);
+
+			while (messageQueue.TryTake (out input)) {
+				if ((target = targets.Current) != null)
+					target.OfferMessage (headers.Increment (), input, this, false);
+				else
+					outgoing.AddData (input);
+			}
+
+			if (!outgoing.IsEmpty && (target = targets.Current) != null)
+				outgoing.ProcessForTarget (target, this, false, ref headers);
 		}
 
 		public void Complete ()
@@ -132,7 +134,7 @@ namespace System.Threading.Tasks.Dataflow
 
 		public int Count {
 			get {
-				return messageQueue.Count;
+				return outgoing.Count;
 			}
 		}
 	}

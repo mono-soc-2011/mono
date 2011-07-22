@@ -42,9 +42,8 @@ namespace System.Threading.Tasks.Dataflow
 		MessageVault<T> vault;
 		DataflowBlockOptions dataflowBlockOptions;
 		readonly Func<T, T> cloner;
-
-		// With each call to LinkTo, targets get added and when the current one is disposed, the next in line is activated
 		TargetBuffer<T> targets = new TargetBuffer<T> ();
+		DataflowMessageHeader headers = DataflowMessageHeader.NewValid ();
 
 		public WriteOnceBlock (Func<T, T> cloner) : this (cloner, defaultOptions)
 		{
@@ -115,7 +114,7 @@ namespace System.Threading.Tasks.Dataflow
 				return;
 
 			foreach (var target in targets) {
-				DataflowMessageHeader header = messageBox.GetNextHeader ();
+				DataflowMessageHeader header = headers.Increment ();
 				if (cloner != null)
 					vault.StoreMessage (header, input);
 				target.OfferMessage (header, input, this, cloner != null);

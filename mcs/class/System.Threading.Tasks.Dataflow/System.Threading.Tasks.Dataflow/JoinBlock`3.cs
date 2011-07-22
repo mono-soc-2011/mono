@@ -39,7 +39,7 @@ namespace System.Threading.Tasks.Dataflow
 		GroupingDataflowBlockOptions dataflowBlockOptions;
 		TargetBuffer<Tuple<T1, T2, T3>> targets = new TargetBuffer<Tuple<T1, T2, T3>> ();
 		MessageVault<Tuple<T1, T2, T3>> vault = new MessageVault<Tuple<T1, T2, T3>> ();
-		ConcurrentQueue<Tuple<T1, T2, T3>> outgoing = new ConcurrentQueue<Tuple<T1, T2, T3>> ();
+		MessageOutgoingQueue<Tuple<T1, T2, T3>> outgoing = new MessageOutgoingQueue<Tuple<T1, T2, T3>> ();
 
 		JoinTarget<T1> target1;
 		JoinTarget<T2> target2;
@@ -47,7 +47,7 @@ namespace System.Threading.Tasks.Dataflow
 
 		SpinLock targetLock = new SpinLock (false);
 
-		DataflowMessageHeader header;
+		DataflowMessageHeader headers;
 
 		public JoinBlock () : this (defaultOptions)
 		{
@@ -73,7 +73,7 @@ namespace System.Threading.Tasks.Dataflow
 		public IDisposable LinkTo (ITargetBlock<Tuple<T1, T2, T3>> target, bool unlinkAfterOne)
 		{
 			var result = targets.AddTarget (target, unlinkAfterOne);
-			ProcessOutgoing (target);
+			outgoing.ProcessForTarget (target, this, false, ref headers);
 			return result;
 		}
 
@@ -151,23 +151,16 @@ namespace System.Threading.Tasks.Dataflow
 			Tuple<T1, T2, T3> tuple = Tuple.Create (val1, val2, val3);
 			ITargetBlock<Tuple<T1, T2, T3>> target = targets.Current;
 			if (target == null) {
-				outgoing.Enqueue (tuple);
-				return;
-			}
-			target.OfferMessage (header.Increment (),
-			                     tuple,
-			                     this,
-			                     false);
-		}
-
-		void ProcessOutgoing (ITargetBlock<Tuple<T1, T2, T3>> target)
-		{
-			Tuple<T1, T2, T3> tuple;
-			while (outgoing.TryDequeue (out tuple))
-				target.OfferMessage (header.Increment (),
+				outgoing.AddData (tuple);
+			} else {
+				target.OfferMessage (headers.Increment (),
 				                     tuple,
 				                     this,
 				                     false);
+			}
+
+			if (!outgoing.IsEmpty && (target = targets.Current) != null)
+				outgoing.ProcessForTarget (target, this, false, ref headers);
 		}
 
 		class JoinTarget<TTarget> : MessageBox<TTarget>, ITargetBlock<TTarget>
