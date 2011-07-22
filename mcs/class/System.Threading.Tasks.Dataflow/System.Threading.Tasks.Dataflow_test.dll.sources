@@ -6,6 +6,7 @@ System.Threading.Tasks.Dataflow/BroadcastBlockTest.cs
 System.Threading.Tasks.Dataflow/WriteOnceBlockTest.cs
 System.Threading.Tasks.Dataflow/BatchBlockTest.cs
 System.Threading.Tasks.Dataflow/JoinBlockTest.cs
+System.Threading.Tasks.Dataflow/JoinBlock`3Test.cs
 System.Threading.Tasks.Dataflow/CompletionHelperTest.cs
 ../System.Threading.Tasks.Dataflow/CompletionHelper.cs
 System.Threading.Tasks/ConcurrentExclusiveSchedulerPairTest.cs
