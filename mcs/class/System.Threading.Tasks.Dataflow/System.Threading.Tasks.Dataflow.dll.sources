@@ -34,3 +34,4 @@ System.Threading.Tasks.Dataflow/ObservableDataflowBlock.cs
 System.Threading.Tasks.Dataflow/ObserverDataflowBlock.cs
 System.Threading.Tasks.Dataflow/PropagatorWrapperBlock.cs
 System.Threading.Tasks.Dataflow/ChooserBlock.cs
+System.Threading.Tasks.Dataflow/ReceiveBlock.cs

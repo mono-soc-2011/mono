@@ -144,22 +144,30 @@ namespace System.Threading.Tasks.Dataflow
 
 		public static TOutput Receive<TOutput> (this ISourceBlock<TOutput> source)
 		{
-			throw new NotImplementedException ();
+			return Receive<TOutput> (source, TimeSpan.FromMilliseconds (-1), CancellationToken.None);
 		}
 
 		public static TOutput Receive<TOutput> (this ISourceBlock<TOutput> source, CancellationToken cancellationToken)
 		{
-			throw new NotImplementedException ();
+			return Receive<TOutput> (source, TimeSpan.FromMilliseconds (-1), cancellationToken);
 		}
 
 		public static TOutput Receive<TOutput> (this ISourceBlock<TOutput> source, TimeSpan timeout)
 		{
-			throw new NotImplementedException ();
+			return Receive<TOutput> (source, timeout, CancellationToken.None);
 		}
 
 		public static TOutput Receive<TOutput> (this ISourceBlock<TOutput> source, TimeSpan timeout, CancellationToken cancellationToken)
 		{
-			throw new NotImplementedException ();
+			if (source == null)
+				throw new ArgumentNullException ("source");
+			if (timeout.TotalMilliseconds < -1)
+				throw new ArgumentOutOfRangeException ("timeout");
+
+			long tm = (long)timeout.TotalMilliseconds;
+			ReceiveBlock<TOutput> block = new ReceiveBlock<TOutput> ();
+			var bridge = source.LinkTo (block);
+			return block.WaitAndGet (bridge, cancellationToken, tm);
 		}
 
 		public static Task<TOutput> ReceiveAsync<TOutput> (this ISourceBlock<TOutput> source)
@@ -184,7 +192,11 @@ namespace System.Threading.Tasks.Dataflow
 
 		public static bool TryReceive<TOutput> (this IReceivableSourceBlock<TOutput> source, out TOutput item)
 		{
-			throw new NotImplementedException ();
+			item = default (TOutput);
+			if (source == null)
+				throw new ArgumentNullException ("source");
+
+			return source.TryReceive (null, out item);
 		}
 	}
 }
