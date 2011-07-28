@@ -37,6 +37,7 @@ namespace System.Threading.Tasks.Dataflow
 	internal class ReceiveBlock<TOutput> : ITargetBlock<TOutput>
 	{
 		ManualResetEventSlim waitHandle = new ManualResetEventSlim (false);
+		TaskCompletionSource<TOutput> completion = new TaskCompletionSource<TOutput> ();
 		IDisposable linkBridge;
 
 		public DataflowMessageStatus OfferMessage (DataflowMessageHeader messageHeader,
@@ -57,6 +58,7 @@ namespace System.Threading.Tasks.Dataflow
 			}
 
 			ReceivedValue = messageValue;
+			completion.TrySetResult (messageValue);
 			Thread.MemoryBarrier ();
 			waitHandle.Set ();
 
@@ -75,6 +77,14 @@ namespace System.Threading.Tasks.Dataflow
 			this.linkBridge = bridge;
 			Wait (token, timeout);
 			return ReceivedValue;
+		}
+
+		public Task<TOutput> AsyncGet (IDisposable bridge, CancellationToken token, long timeout)
+		{
+			this.linkBridge = bridge;
+			token.Register (() => completion.TrySetCanceled ());
+			// TODO : take care of timeout through the TaskEx.Wait thing
+			return completion.Task;
 		}
 
 		public void Wait (CancellationToken token, long timeout)

@@ -164,6 +164,8 @@ namespace System.Threading.Tasks.Dataflow
 			if (timeout.TotalMilliseconds < -1)
 				throw new ArgumentOutOfRangeException ("timeout");
 
+			cancellationToken.ThrowIfCancellationRequested ();
+
 			long tm = (long)timeout.TotalMilliseconds;
 			ReceiveBlock<TOutput> block = new ReceiveBlock<TOutput> ();
 			var bridge = source.LinkTo (block);
@@ -172,22 +174,32 @@ namespace System.Threading.Tasks.Dataflow
 
 		public static Task<TOutput> ReceiveAsync<TOutput> (this ISourceBlock<TOutput> source)
 		{
-			throw new NotImplementedException ();
+			return ReceiveAsync<TOutput> (source, TimeSpan.FromMilliseconds (-1), CancellationToken.None);
 		}
 
 		public static Task<TOutput> ReceiveAsync<TOutput> (this ISourceBlock<TOutput> source, CancellationToken cancellationToken)
 		{
-			throw new NotImplementedException ();
+			return ReceiveAsync (source, TimeSpan.FromMilliseconds (-1), cancellationToken);
 		}
 
 		public static Task<TOutput> ReceiveAsync<TOutput> (this ISourceBlock<TOutput> source, TimeSpan timeout)
 		{
-			throw new NotImplementedException ();
+			return ReceiveAsync<TOutput> (source, timeout, CancellationToken.None);
 		}
 
 		public static Task<TOutput> ReceiveAsync<TOutput> (this ISourceBlock<TOutput> source, TimeSpan timeout, CancellationToken cancellationToken)
 		{
-			throw new NotImplementedException ();
+			if (source == null)
+				throw new ArgumentNullException ("source");
+			if (timeout.TotalMilliseconds < -1)
+				throw new ArgumentOutOfRangeException ("timeout");
+
+			cancellationToken.ThrowIfCancellationRequested ();
+
+			long tm = (long)timeout.TotalMilliseconds;
+			ReceiveBlock<TOutput> block = new ReceiveBlock<TOutput> ();
+			var bridge = source.LinkTo (block);
+			return block.AsyncGet (bridge, cancellationToken, tm);
 		}
 
 		public static bool TryReceive<TOutput> (this IReceivableSourceBlock<TOutput> source, out TOutput item)
