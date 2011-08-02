@@ -57,12 +57,19 @@ namespace System.Threading.Tasks.Dataflow
 			}
 		}
 
+		IEnumerable<T> GetNonBlockingConsumingEnumerable ()
+		{
+			T temp;
+			while (outgoing.TryTake (out temp))
+				yield return temp;
+		}
+
 		public void ProcessForTarget (ITargetBlock<T> target, ISourceBlock<T> source, bool consumeToAccept, ref DataflowMessageHeader headers)
 		{
 			if (target == null)
 				return;
 
-			foreach (var output in outgoing.GetConsumingEnumerable ())
+			foreach (var output in GetNonBlockingConsumingEnumerable ())
 				target.OfferMessage (headers.Increment (), output, source, consumeToAccept);
 		}
 
@@ -91,7 +98,7 @@ namespace System.Threading.Tasks.Dataflow
 			if (list.Count == 0)
 				return false;
 
-			list.AddRange (outgoing.GetConsumingEnumerable ());
+			list.AddRange (GetNonBlockingConsumingEnumerable ());
 			items = list;
 
 			VerifyCompleteness ();
