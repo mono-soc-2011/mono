@@ -56,7 +56,7 @@ namespace System.Threading.Tasks.Dataflow
 
 			this.action = action;
 			this.dataflowBlockOptions = dataflowBlockOptions;
-			this.messageBox = new ExecutingMessageBox<TInput> (messageQueue, compHelper, ProcessQueue, dataflowBlockOptions);
+			this.messageBox = new ExecutingMessageBox<TInput> (messageQueue, compHelper, () => true, ProcessQueue, dataflowBlockOptions);
 		}
 
 		public ActionBlock (Func<TInput, Task> action) : this (action, defaultOptions)

@@ -39,7 +39,7 @@ namespace System.Threading.Tasks.Dataflow
 		GroupingDataflowBlockOptions dataflowBlockOptions;
 		TargetBuffer<Tuple<T1, T2>> targets = new TargetBuffer<Tuple<T1, T2>> ();
 		MessageVault<Tuple<T1, T2>> vault = new MessageVault<Tuple<T1, T2>> ();
-		MessageOutgoingQueue<Tuple<T1, T2>> outgoing = new MessageOutgoingQueue<Tuple<T1, T2>> ();
+		MessageOutgoingQueue<Tuple<T1, T2>> outgoing;
 
 		JoinTarget<T1> target1;
 		JoinTarget<T2> target2;
@@ -59,6 +59,7 @@ namespace System.Threading.Tasks.Dataflow
 			this.dataflowBlockOptions = dataflowBlockOptions;
 			this.target1 = new JoinTarget<T1> (this, SignalArrivalTarget1, new BlockingCollection<T1> (), compHelper);
 			this.target2 = new JoinTarget<T2> (this, SignalArrivalTarget2, new BlockingCollection<T2> (), compHelper);
+			this.outgoing = new MessageOutgoingQueue<Tuple<T1, T2>> (compHelper, () => target1.Buffer.IsCompleted || target2.Buffer.IsCompleted);
 		}
 
 		public IDisposable LinkTo (ITargetBlock<Tuple<T1, T2>> target, bool unlinkAfterOne)
@@ -99,7 +100,7 @@ namespace System.Threading.Tasks.Dataflow
 
 		public void Complete ()
 		{
-			compHelper.Complete ();
+			outgoing.Complete ();
 		}
 
 		public void Fault (Exception ex)
@@ -156,7 +157,7 @@ namespace System.Threading.Tasks.Dataflow
 			Action signal;
 
 			public JoinTarget (JoinBlock<T1, T2> joinBlock, Action signal, BlockingCollection<TTarget> buffer, CompletionHelper helper)
-				: base (buffer, helper)
+			: base (buffer, helper, () => joinBlock.outgoing.IsCompleted)
 			{
 				this.joinBlock = joinBlock;
 				this.buffer = buffer;
@@ -184,7 +185,7 @@ namespace System.Threading.Tasks.Dataflow
 
 			void IDataflowBlock.Complete ()
 			{
-				joinBlock.Complete ();
+				Complete ();
 			}
 
 			Task IDataflowBlock.Completion {

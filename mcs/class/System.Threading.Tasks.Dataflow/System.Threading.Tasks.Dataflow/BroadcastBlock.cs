@@ -41,7 +41,7 @@ namespace System.Threading.Tasks.Dataflow
 		MessageVault<T> vault;
 		DataflowBlockOptions dataflowBlockOptions;
 		readonly Func<T, T> cloner;
-		MessageOutgoingQueue<T> outgoing = new MessageOutgoingQueue<T> ();
+		MessageOutgoingQueue<T> outgoing;
 		TargetBuffer<T> targets = new TargetBuffer<T> ();
 		DataflowMessageHeader headers = DataflowMessageHeader.NewValid ();
 
@@ -57,7 +57,8 @@ namespace System.Threading.Tasks.Dataflow
 
 			this.cloner = cloner;
 			this.dataflowBlockOptions = dataflowBlockOptions;
-			this.messageBox = new PassingMessageBox<T> (messageQueue, compHelper, BroadcastProcess, dataflowBlockOptions);
+			this.messageBox = new PassingMessageBox<T> (messageQueue, compHelper, () => outgoing.IsCompleted, BroadcastProcess, dataflowBlockOptions);
+			this.outgoing = new MessageOutgoingQueue<T> (compHelper, () => messageQueue.IsCompleted);
 			this.vault = new MessageVault<T> ();
 		}
 

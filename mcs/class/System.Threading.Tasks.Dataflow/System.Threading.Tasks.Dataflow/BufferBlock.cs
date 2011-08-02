@@ -39,7 +39,7 @@ namespace System.Threading.Tasks.Dataflow
 		CompletionHelper compHelper = CompletionHelper.GetNew ();
 		MessageBox<T> messageBox;
 		MessageVault<T> vault;
-		MessageOutgoingQueue<T> outgoing = new MessageOutgoingQueue<T> ();
+		MessageOutgoingQueue<T> outgoing;
 		BlockingCollection<T> messageQueue = new BlockingCollection<T> ();
 		TargetBuffer<T> targets = new TargetBuffer<T> ();
 		DataflowMessageHeader headers = DataflowMessageHeader.NewValid ();
@@ -55,7 +55,8 @@ namespace System.Threading.Tasks.Dataflow
 				throw new ArgumentNullException ("dataflowBlockOptions");
 
 			this.dataflowBlockOptions = dataflowBlockOptions;
-			this.messageBox = new PassingMessageBox<T> (messageQueue, compHelper, ProcessQueue, dataflowBlockOptions);
+			this.messageBox = new PassingMessageBox<T> (messageQueue, compHelper, () => outgoing.IsCompleted, ProcessQueue, dataflowBlockOptions);
+			this.outgoing = new MessageOutgoingQueue<T> (compHelper, () => messageQueue.IsCompleted);
 			this.vault = new MessageVault<T> ();
 		}
 
@@ -119,6 +120,7 @@ namespace System.Threading.Tasks.Dataflow
 		public void Complete ()
 		{
 			messageBox.Complete ();
+			outgoing.Complete ();
 		}
 
 		public void Fault (Exception ex)

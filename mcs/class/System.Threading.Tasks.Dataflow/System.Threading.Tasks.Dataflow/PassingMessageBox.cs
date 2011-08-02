@@ -38,8 +38,9 @@ namespace System.Threading.Tasks.Dataflow
 		
 		public PassingMessageBox (BlockingCollection<TInput> messageQueue,
 		                          CompletionHelper compHelper,
+		                          Func<bool> externalCompleteTester,
 		                          Action processQueue,
-		                          DataflowBlockOptions dataflowBlockOptions) : base (messageQueue, compHelper)
+		                          DataflowBlockOptions dataflowBlockOptions) : base (messageQueue, compHelper, externalCompleteTester)
 		{
 			this.dataflowBlockOptions = dataflowBlockOptions;
 			this.processQueue = processQueue;

@@ -36,18 +36,25 @@ namespace System.Threading.Tasks.Dataflow
 	 */
 	internal class MessageOutgoingQueue<T>
 	{
-		ConcurrentQueue<T> outgoing = new ConcurrentQueue<T> ();
+		readonly ConcurrentQueue<T> store = new ConcurrentQueue<T> ();
+		readonly BlockingCollection<T> outgoing;
+		readonly CompletionHelper compHelper;
+		readonly Func<bool> externalCompleteTester;
+
+		public MessageOutgoingQueue (CompletionHelper compHelper, Func<bool> externalCompleteTester)
+		{
+			this.outgoing = new BlockingCollection<T> (store);
+			this.compHelper = compHelper;
+			this.externalCompleteTester = externalCompleteTester;
+		}
 
 		public void AddData (T data)
 		{
-			outgoing.Enqueue (data);
-		}
-
-		public IEnumerable<T> GetConsumingEnumerable ()
-		{
-			T result;
-			while (outgoing.TryDequeue (out result))
-				yield return result;
+			try {
+				outgoing.Add (data);
+			} catch (InvalidOperationException) {
+				VerifyCompleteness ();
+			}
 		}
 
 		public void ProcessForTarget (ITargetBlock<T> target, ISourceBlock<T> source, bool consumeToAccept, ref DataflowMessageHeader headers)
@@ -55,7 +62,7 @@ namespace System.Threading.Tasks.Dataflow
 			if (target == null)
 				return;
 
-			foreach (var output in GetConsumingEnumerable ())
+			foreach (var output in outgoing.GetConsumingEnumerable ())
 				target.OfferMessage (headers.Increment (), output, source, consumeToAccept);
 		}
 
@@ -64,41 +71,61 @@ namespace System.Threading.Tasks.Dataflow
 			item = default (T);
 
 			T result;
-			if (!outgoing.TryPeek (out result))
-				return false;
+			bool success = false;
+			if (store.TryPeek (out result) && (filter == null || filter (result)))
+				success = outgoing.TryTake (out item);
 
-			if (filter == null || filter (result))
-				return outgoing.TryDequeue (out item);
+			VerifyCompleteness ();
 
-			return false;
+			return success;
 		}
 
 		public bool TryReceiveAll (out IList<T> items)
 		{
 			items = null;
 
-			if (outgoing.IsEmpty)
+			if (store.IsEmpty)
 				return false;
 
 			List<T> list = new List<T> (outgoing.Count);
 			if (list.Count == 0)
 				return false;
 
-			list.AddRange (GetConsumingEnumerable ());
+			list.AddRange (outgoing.GetConsumingEnumerable ());
 			items = list;
+
+			VerifyCompleteness ();
 
 			return list.Count > 0;
 		}
 
+		public void Complete ()
+		{
+			outgoing.CompleteAdding ();
+			VerifyCompleteness ();
+		}
+
+		void VerifyCompleteness ()
+		{
+			if (outgoing.IsCompleted && externalCompleteTester ())
+				compHelper.Complete ();
+		}
+
 		public bool IsEmpty {
 			get {
-				return outgoing.IsEmpty;
+				return store.IsEmpty;
 			}
 		}
 
 		public int Count {
 			get {
-				return outgoing.Count;
+				return store.Count;
+			}
+		}
+
+		public bool IsCompleted {
+			get {
+				return outgoing.IsCompleted;
 			}
 		}
 	}

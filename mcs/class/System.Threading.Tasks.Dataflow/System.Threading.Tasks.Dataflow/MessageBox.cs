@@ -38,11 +38,13 @@ namespace System.Threading.Tasks.Dataflow
 	{
 		readonly CompletionHelper compHelper;
 		readonly BlockingCollection<TInput> messageQueue = new BlockingCollection<TInput> ();
+		readonly Func<bool> externalCompleteTester;
 
-		public MessageBox (BlockingCollection<TInput> messageQueue, CompletionHelper compHelper)
+		public MessageBox (BlockingCollection<TInput> messageQueue, CompletionHelper compHelper, Func<bool> externalCompleteTester)
 		{
 			this.compHelper = compHelper;
 			this.messageQueue = messageQueue;
+			this.externalCompleteTester = externalCompleteTester;
 		}
 
 		public DataflowMessageStatus OfferMessage (ITargetBlock<TInput> target,
@@ -53,13 +55,14 @@ namespace System.Threading.Tasks.Dataflow
 		{
 			if (!messageHeader.IsValid)
 				return DataflowMessageStatus.Declined;
+			if (messageQueue.IsAddingCompleted)
+				return DataflowMessageStatus.DecliningPermanently;
 
 			if (consumeToAccept) {
 				bool consummed;
 				if (!source.ReserveMessage (messageHeader, target))
 					return DataflowMessageStatus.NotAvailable;
 				messageValue = source.ConsumeMessage (messageHeader, target, out consummed);
-				// TODO: find correct behavior
 				if (!consummed)
 					return DataflowMessageStatus.NotAvailable;
 			}
@@ -72,6 +75,9 @@ namespace System.Threading.Tasks.Dataflow
 				return DataflowMessageStatus.DecliningPermanently;
 			}
 			EnsureProcessing ();
+
+			VerifyCompleteness ();
+
 			return DataflowMessageStatus.Accepted;
 		}
 
@@ -84,7 +90,12 @@ namespace System.Threading.Tasks.Dataflow
 		{
 			// Make message queue complete
 			messageQueue.CompleteAdding ();
-			if (messageQueue.IsCompleted)
+			VerifyCompleteness ();
+		}
+
+		void VerifyCompleteness ()
+		{
+			if (messageQueue.IsCompleted && externalCompleteTester ())
 				compHelper.Complete ();
 		}
 	}

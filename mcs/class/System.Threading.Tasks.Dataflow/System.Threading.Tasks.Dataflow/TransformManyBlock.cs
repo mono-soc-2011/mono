@@ -42,7 +42,7 @@ namespace System.Threading.Tasks.Dataflow
 		MessageVault<TOutput> vault;
 		ExecutionDataflowBlockOptions dataflowBlockOptions;
 		readonly Func<TInput, IEnumerable<TOutput>> transformer;
-		MessageOutgoingQueue<TOutput> outgoing = new MessageOutgoingQueue<TOutput> ();
+		MessageOutgoingQueue<TOutput> outgoing;
 		TargetBuffer<TOutput> targets = new TargetBuffer<TOutput> ();
 		DataflowMessageHeader headers = DataflowMessageHeader.NewValid ();
 
@@ -58,7 +58,12 @@ namespace System.Threading.Tasks.Dataflow
 
 			this.transformer = transformer;
 			this.dataflowBlockOptions = dataflowBlockOptions;
-			this.messageBox = new ExecutingMessageBox<TInput> (messageQueue, compHelper, TransformProcess, dataflowBlockOptions);
+			this.messageBox = new ExecutingMessageBox<TInput> (messageQueue,
+			                                                   compHelper,
+			                                                   () => outgoing.IsCompleted,
+			                                                   TransformProcess,
+			                                                   dataflowBlockOptions);
+			this.outgoing = new MessageOutgoingQueue<TOutput> (compHelper, () => messageQueue.IsCompleted);
 			this.vault = new MessageVault<TOutput> ();
 		}
 

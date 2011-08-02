@@ -39,7 +39,7 @@ namespace System.Threading.Tasks.Dataflow
 		GroupingDataflowBlockOptions dataflowBlockOptions;
 		TargetBuffer<Tuple<T1, T2, T3>> targets = new TargetBuffer<Tuple<T1, T2, T3>> ();
 		MessageVault<Tuple<T1, T2, T3>> vault = new MessageVault<Tuple<T1, T2, T3>> ();
-		MessageOutgoingQueue<Tuple<T1, T2, T3>> outgoing = new MessageOutgoingQueue<Tuple<T1, T2, T3>> ();
+		MessageOutgoingQueue<Tuple<T1, T2, T3>> outgoing;
 
 		JoinTarget<T1> target1;
 		JoinTarget<T2> target2;
@@ -62,12 +62,15 @@ namespace System.Threading.Tasks.Dataflow
 			this.dataflowBlockOptions = dataflowBlockOptions;
 
 			Func<bool> checker1 = () => target2.Buffer.Count == 0 || target3.Buffer.Count == 0;
-		Func<bool> checker2 = () => target1.Buffer.Count == 0 || target3.Buffer.Count == 0;
-	Func<bool> checker3 = () => target1.Buffer.Count == 0 || target2.Buffer.Count == 0;
+			Func<bool> checker2 = () => target1.Buffer.Count == 0 || target3.Buffer.Count == 0;
+			Func<bool> checker3 = () => target1.Buffer.Count == 0 || target2.Buffer.Count == 0;
 
 			this.target1 = new JoinTarget<T1> (this, () => SignalArrivalTargetImpl (checker1), new BlockingCollection<T1> (), compHelper);
 			this.target2 = new JoinTarget<T2> (this, () => SignalArrivalTargetImpl (checker2), new BlockingCollection<T2> (), compHelper);
 			this.target3 = new JoinTarget<T3> (this, () => SignalArrivalTargetImpl (checker3), new BlockingCollection<T3> (), compHelper);
+			this.outgoing =
+				new MessageOutgoingQueue<Tuple<T1, T2, T3>> (compHelper,
+				                                             () => target1.Buffer.IsCompleted || target2.Buffer.IsCompleted || target3.Buffer.IsCompleted);
 		}
 
 		public IDisposable LinkTo (ITargetBlock<Tuple<T1, T2, T3>> target, bool unlinkAfterOne)
@@ -108,7 +111,7 @@ namespace System.Threading.Tasks.Dataflow
 
 		public void Complete ()
 		{
-			compHelper.Complete ();
+			outgoing.Complete ();
 		}
 
 		public void Fault (Exception ex)
@@ -170,7 +173,7 @@ namespace System.Threading.Tasks.Dataflow
 			Action signal;
 
 			public JoinTarget (JoinBlock<T1, T2, T3> joinBlock, Action signal, BlockingCollection<TTarget> buffer, CompletionHelper helper)
-				: base (buffer, helper)
+			: base (buffer, helper, () => joinBlock.outgoing.IsCompleted)
 			{
 				this.joinBlock = joinBlock;
 				this.buffer = buffer;
@@ -198,7 +201,7 @@ namespace System.Threading.Tasks.Dataflow
 
 			void IDataflowBlock.Complete ()
 			{
-				joinBlock.Complete ();
+				Complete ();
 			}
 
 			Task IDataflowBlock.Completion {

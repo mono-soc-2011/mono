@@ -42,7 +42,7 @@ namespace System.Threading.Tasks.Dataflow
 		DataflowBlockOptions dataflowBlockOptions;
 		readonly int batchSize;
 		int batchCount;
-		MessageOutgoingQueue<T[]> outgoing = new MessageOutgoingQueue<T[]> ();
+		MessageOutgoingQueue<T[]> outgoing;
 		TargetBuffer<T[]> targets = new TargetBuffer<T[]> ();
 		DataflowMessageHeader headers = DataflowMessageHeader.NewValid ();
 
@@ -58,7 +58,8 @@ namespace System.Threading.Tasks.Dataflow
 
 			this.batchSize = batchSize;
 			this.dataflowBlockOptions = dataflowBlockOptions;
-			this.messageBox = new PassingMessageBox<T> (messageQueue, compHelper, BatchProcess, dataflowBlockOptions);
+			this.messageBox = new PassingMessageBox<T> (messageQueue, compHelper, () => outgoing.IsCompleted, BatchProcess, dataflowBlockOptions);
+			this.outgoing = new MessageOutgoingQueue<T[]> (compHelper, () => messageQueue.IsCompleted);
 			this.vault = new MessageVault<T[]> ();
 		}
 

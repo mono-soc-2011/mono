@@ -57,7 +57,7 @@ namespace System.Threading.Tasks.Dataflow
 
 			this.cloner = cloner;
 			this.dataflowBlockOptions = dataflowBlockOptions;
-			this.messageBox = new PassingMessageBox<T> (messageQueue, compHelper, BroadcastProcess, dataflowBlockOptions);
+			this.messageBox = new PassingMessageBox<T> (messageQueue, compHelper, () => true, BroadcastProcess, dataflowBlockOptions);
 			this.vault = new MessageVault<T> ();
 		}
 
