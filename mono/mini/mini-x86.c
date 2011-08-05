@@ -225,7 +225,7 @@ typedef struct {
 
 #define PARAM_REGS 0
 
-#define FLOAT_PARAM_REGS 0
+#define SSE_PARAM_REGS 4
 
 static X86_Reg_No param_regs [] = { 0 };
 
@@ -262,11 +262,16 @@ add_general_pair (guint32 *gr, guint32 *stack_size, ArgInfo *ainfo)
 }
 
 static void inline
-add_float (guint32 *gr, guint32 *stack_size, ArgInfo *ainfo, gboolean is_double)
+add_float (guint32 *gr, guint32 *stack_size, ArgInfo *ainfo, gboolean is_double, gboolean use_fp_stack)
 {
+	int param_regs = 0;
+	if (!use_fp_stack) {
+		param_regs = SSE_PARAM_REGS;
+	}
+
     ainfo->offset = *stack_size;
 
-    if (*gr >= FLOAT_PARAM_REGS) {
+    if (*gr >= param_regs) {
 		ainfo->storage = ArgOnStack;
 		(*stack_size) += is_double ? 8 : 4;
     }
@@ -458,7 +463,7 @@ get_call_info_internal (MonoGenericSharingContext *gsctx, CallInfo *cinfo, MonoM
 
 	if (!sig->pinvoke && (sig->call_convention == MONO_CALL_VARARG) && (n == 0)) {
 		gr = PARAM_REGS;
-		fr = FLOAT_PARAM_REGS;
+		fr = 0;
 		
 		/* Emit the signature cookie just before the implicit arguments */
 		add_general (&gr, &stack_size, &cinfo->sig_cookie);
@@ -475,7 +480,7 @@ get_call_info_internal (MonoGenericSharingContext *gsctx, CallInfo *cinfo, MonoM
 			 * in registers.
 			 */
 			gr = PARAM_REGS;
-			fr = FLOAT_PARAM_REGS;
+			fr = 0;
 
 			/* Emit the signature cookie just before the implicit arguments */
 			add_general (&gr, &stack_size, &cinfo->sig_cookie);
@@ -530,10 +535,10 @@ get_call_info_internal (MonoGenericSharingContext *gsctx, CallInfo *cinfo, MonoM
 			add_general_pair (&gr, &stack_size, ainfo);
 			break;
 		case MONO_TYPE_R4:
-			add_float (&fr, &stack_size, ainfo, FALSE);
+			add_float (&fr, &stack_size, ainfo, FALSE, use_fp_stack);
 			break;
 		case MONO_TYPE_R8:
-			add_float (&fr, &stack_size, ainfo, TRUE);
+			add_float (&fr, &stack_size, ainfo, TRUE, use_fp_stack);
 			break;
 		default:
 			g_error ("unexpected type 0x%x", ptype->type);
@@ -543,7 +548,7 @@ get_call_info_internal (MonoGenericSharingContext *gsctx, CallInfo *cinfo, MonoM
 
 	if (!sig->pinvoke && (sig->call_convention == MONO_CALL_VARARG) && (n > 0) && (sig->sentinelpos == sig->param_count)) {
 		gr = PARAM_REGS;
-		fr = FLOAT_PARAM_REGS;
+		fr = 0;
 		
 		/* Emit the signature cookie just before the implicit arguments */
 		add_general (&gr, &stack_size, &cinfo->sig_cookie);
@@ -1502,6 +1507,16 @@ mono_arch_emit_call (MonoCompile *cfg, MonoCallInst *call)
 		}
 		else {
 			switch (ainfo->storage) {
+			case ArgInFloatSSEReg:
+			case ArgInDoubleSSEReg: {
+				MonoInst *ins;
+				MONO_INST_NEW (cfg, ins, OP_FMOVE);
+				ins->dreg = mono_alloc_freg (cfg);
+				ins->sreg1 = in->dreg;
+				MONO_ADD_INS (cfg->cbb, ins);
+				mono_call_inst_add_outarg_reg (cfg, call, ins->dreg, ainfo->reg, TRUE);
+			}
+			break;
 			case ArgOnStack:
 				arg->opcode = OP_X86_PUSH;
 				if (!t->byref) {
@@ -1520,12 +1535,11 @@ mono_arch_emit_call (MonoCompile *cfg, MonoCallInst *call)
 						MONO_EMIT_NEW_UNALU (cfg, OP_X86_PUSH, -1, in->dreg + 2);
 					}
 				}
+				MONO_ADD_INS (cfg->cbb, arg);
 				break;
 			default:
 				g_assert_not_reached ();
 			}
-			
-			MONO_ADD_INS (cfg->cbb, arg);
 		}
 
 		if (!sig->pinvoke && (sig->call_convention == MONO_CALL_VARARG) && (i == sentinelpos)) {
@@ -2215,7 +2229,7 @@ emit_move_return_value (MonoCompile *cfg, MonoInst *ins, guint8 *code)
 	case OP_FCALL_MEMBASE:
 		if (X86_USE_SSE_FP(cfg)) {
 			MonoCallInst *call = (MonoCallInst*)ins;
-			if (call->signature->pinvoke) {// || cfg->method->wrapper_type == MONO_WRAPPER_MANAGED_TO_NATIVE) {
+			if (call->signature->pinvoke) {
 				x86_fst_membase (code, X86_ESP, -8, TRUE, TRUE);
 				x86_sse_movsd_reg_membase (code, ins->dreg, X86_ESP, -8);
 			} else if (ins->dreg != X86_XMM0) {
@@ -5408,7 +5422,7 @@ mono_arch_emit_prolog (MonoCompile *cfg)
 	/* load arguments allocated to register from the stack */
 	sig = mono_method_signature (method);
 	pos = 0;
-
+	
 	for (i = 0; i < sig->param_count + sig->hasthis; ++i) {
 		inst = cfg->args [pos];
 		if (inst->opcode == OP_REGVAR) {
