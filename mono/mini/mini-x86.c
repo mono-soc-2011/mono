@@ -468,7 +468,7 @@ get_call_info_internal (MonoGenericSharingContext *gsctx, CallInfo *cinfo, MonoM
 		/* Emit the signature cookie just before the implicit arguments */
 		add_general (&gr, &stack_size, &cinfo->sig_cookie);
 	}
-
+	
 	for (i = pstart; i < sig->param_count; ++i) {
 		ArgInfo *ainfo = &cinfo->args [sig->hasthis + i];
 		MonoType *ptype;
@@ -535,10 +535,10 @@ get_call_info_internal (MonoGenericSharingContext *gsctx, CallInfo *cinfo, MonoM
 			add_general_pair (&gr, &stack_size, ainfo);
 			break;
 		case MONO_TYPE_R4:
-			add_float (&fr, &stack_size, ainfo, FALSE, use_fp_stack);
+			add_float (&fr, &stack_size, ainfo, FALSE, use_fp_stack || sig->pinvoke);
 			break;
 		case MONO_TYPE_R8:
-			add_float (&fr, &stack_size, ainfo, TRUE, use_fp_stack);
+			add_float (&fr, &stack_size, ainfo, TRUE, use_fp_stack || sig->pinvoke);
 			break;
 		default:
 			g_error ("unexpected type 0x%x", ptype->type);
@@ -5422,7 +5422,7 @@ mono_arch_emit_prolog (MonoCompile *cfg)
 	/* load arguments allocated to register from the stack */
 	sig = mono_method_signature (method);
 	pos = 0;
-	
+
 	for (i = 0; i < sig->param_count + sig->hasthis; ++i) {
 		inst = cfg->args [pos];
 		if (inst->opcode == OP_REGVAR) {
