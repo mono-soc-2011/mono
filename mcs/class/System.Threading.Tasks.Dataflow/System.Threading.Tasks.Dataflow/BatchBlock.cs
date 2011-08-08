@@ -96,16 +96,12 @@ namespace System.Threading.Tasks.Dataflow
 
 		public bool TryReceive (Predicate<T[]> filter, out T[] item)
 		{
-			// TODO
-			item = default(T[]);
-			return false;
+			return TryReceive (filter, out item);
 		}
 
 		public bool TryReceiveAll (out IList<T[]> items)
 		{
-			// TODO
-			items = null;
-			return false;
+			return outgoing.TryReceiveAll (out items);
 		}
 
 		public void TriggerBatch ()
