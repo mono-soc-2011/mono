@@ -82,16 +82,12 @@ namespace System.Threading.Tasks.Dataflow
 
 		public bool TryReceive (Predicate<Tuple<T1, T2, T3>> filter, out Tuple<T1, T2, T3> item)
 		{
-			// TODO
-			item = null;
-			return false;
+			return outgoing.TryReceive (filter, out item);
 		}
 
 		public bool TryReceiveAll (out IList<Tuple<T1, T2, T3>> items)
 		{
-			// TODO
-			items = null;
-			return false;
+			return outgoing.TryReceiveAll (out items);
 		}
 
 		public Tuple<T1, T2, T3> ConsumeMessage (DataflowMessageHeader messageHeader, ITargetBlock<Tuple<T1, T2, T3>> target, out bool messageConsumed)
