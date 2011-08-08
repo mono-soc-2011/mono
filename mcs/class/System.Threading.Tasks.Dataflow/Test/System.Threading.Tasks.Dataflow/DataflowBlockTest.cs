@@ -100,6 +100,46 @@ namespace MonoTests.System.Threading.Tasks.Dataflow
 			Task.Factory.StartNew (() => { Thread.Sleep (1400); block.Post (42); });
 			Assert.AreEqual (42, block.Receive ());
 		}
+
+		[Test]
+		public void AsyncReceiveTest ()
+		{
+			int result = -1;
+			var mre = new ManualResetEventSlim (false);
+
+			var block = new WriteOnceBlock<int> (null);
+			block.ReceiveAsync ().ContinueWith (i => { result = i.Result; mre.Set (); });
+			Task.Factory.StartNew (() => { Thread.Sleep (600); block.Post (42); });
+			mre.Wait ();
+
+			Assert.AreEqual (42, result);
+		}
+
+		[Test]
+		public void AsyncReceiveTestCanceled ()
+		{
+			var src = new CancellationTokenSource ();
+
+			var block = new WriteOnceBlock<int> (null);
+			var task = block.ReceiveAsync (src.Token);
+			Task.Factory.StartNew (() => { Thread.Sleep (800); block.Post (42); });
+			Thread.Sleep (50);
+			src.Cancel ();
+
+			AggregateException ex = null;
+
+			try {
+				task.Wait ();
+			} catch (AggregateException e) {
+				ex = e;
+			}
+
+			Assert.IsNotNull (ex);
+			Assert.IsNotNull (ex.InnerException);
+			Assert.IsInstanceOfType (typeof (OperationCanceledException), ex.InnerException);
+			Assert.IsTrue (task.IsCompleted);
+			Assert.AreEqual (TaskStatus.Canceled, task.Status);
+		}
 	}
 }
 #endif
