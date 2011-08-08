@@ -38,12 +38,15 @@ namespace System.Threading.Tasks.Dataflow
 		CompletionHelper compHelper = CompletionHelper.GetNew ();
 		BlockingCollection<T> messageQueue = new BlockingCollection<T> ();
 		MessageBox<T> messageBox;
-		AtomicBooleanValue written;
 		MessageVault<T> vault;
 		DataflowBlockOptions dataflowBlockOptions;
 		readonly Func<T, T> cloner;
 		TargetBuffer<T> targets = new TargetBuffer<T> ();
 		DataflowMessageHeader headers = DataflowMessageHeader.NewValid ();
+
+		AtomicBooleanValue written;
+		bool ready;
+		T finalValue;
 
 		public WriteOnceBlock (Func<T, T> cloner) : this (cloner, defaultOptions)
 		{
@@ -66,10 +69,15 @@ namespace System.Threading.Tasks.Dataflow
 		                                           ISourceBlock<T> source,
 		                                           bool consumeToAccept)
 		{
-			if (written.TryRelaxedSet ())
-				return messageBox.OfferMessage (this, messageHeader, messageValue, source, consumeToAccept);
-			else
+			if (written.TryRelaxedSet ()) {
+				Thread.MemoryBarrier ();
+				finalValue = messageValue;
+				Thread.MemoryBarrier ();
+				ready = true;
+				return messageBox.OfferMessage (this, messageHeader, finalValue, source, consumeToAccept);
+			} else {
 				return DataflowMessageStatus.DecliningPermanently;
+			}
 		}
 
 		public IDisposable LinkTo (ITargetBlock<T> target, bool unlinkAfterOne)
@@ -94,16 +102,36 @@ namespace System.Threading.Tasks.Dataflow
 
 		public bool TryReceive (Predicate<T> filter, out T item)
 		{
-			// TODO
-			item = default(T);
+			item = default (T);
+			if (!written.Value)
+				return false;
+
+			if (!ready) {
+				SpinWait spin = new SpinWait ();
+				while (!ready)
+					spin.SpinOnce ();
+			}
+
+			if (filter == null || filter (finalValue)) {
+				item = cloner != null ? cloner (finalValue) : finalValue;
+				return true;
+			}
+
 			return false;
 		}
 
 		public bool TryReceiveAll (out IList<T> items)
 		{
-			// TODO
 			items = null;
-			return false;
+			if (!written.Value)
+				return false;
+
+			T item;
+			if (!TryReceive (null, out item))
+				return false;
+
+			items = new T[] { item };
+			return true;
 		}
 
 		void BroadcastProcess ()

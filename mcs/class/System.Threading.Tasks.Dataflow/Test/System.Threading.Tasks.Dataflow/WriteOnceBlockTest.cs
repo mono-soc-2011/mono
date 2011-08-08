@@ -29,6 +29,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using System.Threading.Tasks.Dataflow;
 
 using NUnit.Framework;
@@ -107,6 +108,25 @@ namespace MonoTests.System.Threading.Tasks.Dataflow
 
 			Assert.IsTrue (act1);
 			Assert.IsTrue (act2);
+		}
+
+		[Test]
+		public void TryReceiveBehavior ()
+		{
+			var block = new WriteOnceBlock<int> (null);
+			int foo;
+			Assert.IsFalse (block.TryReceive (null, out foo));
+			block.Post (42);
+			Thread.Sleep (300);
+			Assert.IsTrue (block.TryReceive (null, out foo));
+			Assert.AreEqual (42, foo);
+			Assert.IsTrue (block.TryReceive (null, out foo));
+			Assert.IsFalse (block.TryReceive (i => i == 0, out foo));
+			IList<int> bar;
+			Assert.IsTrue (block.TryReceiveAll (out bar));
+			Assert.IsNotNull (bar);
+			Assert.AreEqual (1, bar.Count);
+			Assert.AreEqual (42, bar[0]);
 		}
 	}
 }
