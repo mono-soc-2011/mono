@@ -210,6 +210,11 @@ namespace System.Threading.Tasks.Dataflow
 
 			return source.TryReceive (null, out item);
 		}
+
+		public static Task<bool> SendAsync<TInput> (this ITargetBlock<TInput> target, TInput item)
+		{
+			throw new NotImplementedException ();
+		}
 	}
 }
 
