@@ -81,7 +81,7 @@ namespace Mono.CodeContracts.Static.Proving {
 				var analysis = new AssertionCrawlerAnalysis ();
 				List<AssertionObligation> obligations = analysis.Gather (driver);
 
-				assertStats = analysis.Stats;
+				assertStats = null;
 				return obligations;
 			}
 
@@ -95,7 +95,6 @@ namespace Mono.CodeContracts.Static.Proving {
 			#region Nested type: AssertionCrawlerAnalysis
 			private class AssertionCrawlerAnalysis : ValueCodeVisitor<TVariable> {
 				private readonly List<AssertionObligation> Obligations = new List<AssertionObligation> ();
-				public object Stats;
 
 				public List<AssertionObligation> Gather (IMethodDriver<TExpression, TVariable> driver)
 				{

@@ -37,7 +37,7 @@ namespace Mono.CodeContracts.Static.Analysis.HeapAnalysis.SymbolicGraph {
 	class SymGraph<TFunc, TADomain> : ISymGraph<TFunc, TADomain, SymGraph<TFunc, TADomain>>
 		where TFunc : IEquatable<TFunc>, IConstantInfo
 		where TADomain : IAbstractDomainForEGraph<TADomain>, IEquatable<TADomain> {
-		public static bool DoIncrementalJoin;
+		public const bool DoIncrementalJoin = false;
 		private static int egraphIdGenerator;
 		private static SymGraph<TFunc, TADomain> BottomValue;
 		public readonly SymValue BottomPlaceHolder;

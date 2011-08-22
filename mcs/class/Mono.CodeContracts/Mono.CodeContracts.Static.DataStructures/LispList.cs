@@ -32,7 +32,7 @@ using System.Text;
 
 namespace Mono.CodeContracts.Static.DataStructures {
 	class LispList<T> {
-		public static readonly LispList<T> Empty;
+		public static readonly LispList<T> Empty = null;
 		private readonly int count;
 		private readonly T element;
 		private readonly LispList<T> tail;

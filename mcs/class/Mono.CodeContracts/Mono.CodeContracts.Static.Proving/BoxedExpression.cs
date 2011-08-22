@@ -1142,7 +1142,7 @@ namespace Mono.CodeContracts.Static.Proving {
 
 		#region Nested type: OldExpression
 		public class OldExpression : BoxedExpression {
-			private static readonly string ContractOldValueTemplate = "Contract.OldValue({0})";
+			private const string ContractOldValueTemplate = "Contract.OldValue({0})";
 
 			public readonly BoxedExpression Old;
 			public readonly TypeNode Type;
@@ -1288,7 +1288,7 @@ namespace Mono.CodeContracts.Static.Proving {
 
 		#region Nested type: ResultExpression
 		public class ResultExpression : BoxedExpression {
-			private static readonly string ContractResultTemplate = "Contract.Result<{0}>()";
+			private const string ContractResultTemplate = "Contract.Result<{0}>()";
 
 			public readonly TypeNode Type;
 
@@ -1427,12 +1427,18 @@ namespace Mono.CodeContracts.Static.Proving {
 				var unary = obj as UnaryExpression;
 				return unary != null && this.Op == unary.Op && this.Argument.Equals (unary.Argument);
 			}
+
+			public override int GetHashCode ()
+			{
+				return this.Op.GetHashCode () * 13 + (this.Argument == null ? 0 : this.Argument.GetHashCode ());
+			}
+
 		}
 		#endregion
 
 		#region Nested type: ValueAtReturnExpression
 		public class ValueAtReturnExpression : BoxedExpression {
-			private static readonly string ContractValueAtReturnTemplate = "Contract.ValueAtReturn({0})";
+			private const string ContractValueAtReturnTemplate = "Contract.ValueAtReturn({0})";
 
 			public readonly TypeNode Type;
 			public readonly BoxedExpression Value;
@@ -1652,6 +1658,11 @@ namespace Mono.CodeContracts.Static.Proving {
 					return this.UnderlyingVar.Equals (boxedExpression.UnderlyingVariable);
 
 				return false;
+			}
+
+			public override int GetHashCode ()
+			{
+				return this.UnderlyingVariable != null ? 0 : this.UnderlyingVariable.GetHashCode ();
 			}
 
 			public override BoxedExpression Substitute<Variable> (Func<Variable, BoxedExpression, BoxedExpression> map)

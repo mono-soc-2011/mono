@@ -576,10 +576,8 @@ namespace Mono.CodeContracts.Static.Analysis.HeapAnalysis {
 			Method visibilityMember = filter.VisibilityMember;
 			TypeNode t = MetaDataProvider.DeclaringType (visibilityMember);
 			TypeNode type = default(TypeNode);
-			bool first = true;
 
 			while (path != null) {
-				TypeNode st = type;
 				PathElement pathElement = path.Head;
 				if (!pathElement.TryGetResultType (out type))
 					return true;
@@ -612,7 +610,6 @@ namespace Mono.CodeContracts.Static.Analysis.HeapAnalysis {
 					}
 				}
 				path = path.Tail;
-				first = false;
 			}
 			return true;
 		}

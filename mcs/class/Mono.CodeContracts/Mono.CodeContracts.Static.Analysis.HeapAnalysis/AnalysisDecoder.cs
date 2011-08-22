@@ -293,8 +293,6 @@ namespace Mono.CodeContracts.Static.Analysis.HeapAnalysis {
 								data.HavocUp (thisSV, ref data.ModifiedAtCall, false);
 								data.HavocFields (thisSV, this.parent.StackContextProvider.MethodContext.Modifies (method), ref data.ModifiedAtCall);
 							}
-							else
-								;
 						}
 						data.AssignValue (dest, MetaDataProvider.System_Void);
 						return data;

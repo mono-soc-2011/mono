@@ -34,7 +34,7 @@ using Mono.CodeContracts.Static.Providers;
 namespace Mono.CodeContracts.Static.Analysis.HeapAnalysis {
 	class Wrapper<T> : SymFunction {
 		public readonly T Item;
-		protected PathElementBase PathElement;
+		protected PathElementBase PathElement = null;
 
 		public Wrapper (T item, ref int idGen, IMetaDataProvider metaDataProvider)
 			: base (ref idGen, metaDataProvider)

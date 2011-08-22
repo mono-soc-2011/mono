@@ -32,7 +32,7 @@ using Mono.CodeContracts.Static.AST.Visitors;
 
 namespace Mono.CodeContracts.Static.ContractExtraction {
 	class GatherLocals : NodeInspector {
-		public HashSet<Local> Locals;
+		public HashSet<Local> Locals = new HashSet<Local> ();
 		private Local exempt_result_local;
 
 		public override void VisitLocal (Local node)

@@ -89,22 +89,22 @@ namespace Mono.CodeContracts.Static.Analysis.HeapAnalysis.SymbolicGraph {
 			get { return GetForwardGraphMap ((t) => t.Item2); }
 		}
 
-		public bool IsResultGraph<TFunc, TAbstractDomain> (SymGraph<TFunc, TAbstractDomain> graph)
-			where TFunc : IEquatable<TFunc>, IConstantInfo
+		public bool IsResultGraph<TFunc1, TAbstractDomain> (SymGraph<TFunc1, TAbstractDomain> graph)
+			where TFunc1 : IEquatable<TFunc1>, IConstantInfo
 			where TAbstractDomain : IAbstractDomainForEGraph<TAbstractDomain>, IEquatable<TAbstractDomain>
 		{
 			return Equals (graph, this.Result);
 		}
 
-		public bool IsGraph1<TFunc, TAbstractDomain> (SymGraph<TFunc, TAbstractDomain> graph)
-			where TFunc : IEquatable<TFunc>, IConstantInfo
+		public bool IsGraph1<TFunc1, TAbstractDomain> (SymGraph<TFunc1, TAbstractDomain> graph)
+			where TFunc1 : IEquatable<TFunc1>, IConstantInfo
 			where TAbstractDomain : IAbstractDomainForEGraph<TAbstractDomain>, IEquatable<TAbstractDomain>
 		{
 			return (Equals (this.Graph1, graph) || Equals (this.Graph1.Parent, graph) && Equals (this.Graph1.Updates, graph.Updates));
 		}
 
-		public bool IsGraph2<TFunc, TAbstractDomain> (SymGraph<TFunc, TAbstractDomain> graph)
-			where TFunc : IEquatable<TFunc>, IConstantInfo
+		public bool IsGraph2<TFunc1, TAbstractDomain> (SymGraph<TFunc1, TAbstractDomain> graph)
+			where TFunc1 : IEquatable<TFunc1>, IConstantInfo
 			where TAbstractDomain : IAbstractDomainForEGraph<TAbstractDomain>, IEquatable<TAbstractDomain>
 		{
 			return (Equals (this.Graph2, graph) || Equals (this.Graph2.Parent, graph) && Equals (this.Graph2.Updates, graph.Updates));

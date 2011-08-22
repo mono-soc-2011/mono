@@ -30,7 +30,7 @@ using System;
 
 namespace Mono.CodeContracts.Static.DataStructures {
 	struct Dummy : IEquatable<Dummy> {
-		public static readonly Dummy Value;
+		public static readonly Dummy Value = new Dummy ();
 
 		#region IEquatable<Dummy> Members
 		public bool Equals (Dummy other)

@@ -35,9 +35,9 @@ using Mono.CodeContracts.Static.DataStructures;
 
 namespace Mono.CodeContracts.Static.ControlFlow.Blocks {
 	class EnsuresBlock<Label> : BlockWithLabels<Label> {
-		private const uint Mask = 0xC0000000;
-		private const uint BeginOldMask = 0x80000000;
-		private const uint EndOldMask = 0x40000000;
+		private const uint Mask = 0xC0000000u;
+		private const uint BeginOldMask = 0x80000000u;
+		private const uint EndOldMask = 0x40000000u;
 
 		private List<uint> overridingLabels;
 
@@ -183,7 +183,7 @@ namespace Mono.CodeContracts.Static.ControlFlow.Blocks {
 			for (int i = this == endBlock ? endOldIndex - 2 : Count - 1; i >= 0; i--) {
 				int endOldI;
 				if (IsBeginOld (i, out endOldI)) {
-					this.overridingLabels [i] = (uint) (BeginOldMask | endOldIndex);
+					this.overridingLabels [i] = BeginOldMask | (uint)endOldIndex;
 					beginBlock = this;
 					Subroutine.AddInferredOldMap (this.Index, i, endBlock, default(TypeNode));
 					return i;
