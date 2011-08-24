@@ -49,7 +49,6 @@ namespace Mono.CodeContracts.Static.Proving {
 			{
 				APC entryAfterRequires = driver.ContextProvider.MethodContext.CFG.EntryAfterRequires;
 				if (facts.IsUnreachable (entryAfterRequires)) {
-					APC pcForMethodEntry = GetPCForMethodEntry (driver.ContextProvider.MethodContext.CFG);
 					proofResults.Add ("Method precondition is unsatisfiable");
 					return;
 				}
@@ -83,13 +82,6 @@ namespace Mono.CodeContracts.Static.Proving {
 
 				assertStats = null;
 				return obligations;
-			}
-
-			private static APC GetPCForMethodEntry (ICFG cfg)
-			{
-				APC pc = cfg.EntryAfterRequires;
-				//todo: implement
-				return cfg.Entry;
 			}
 
 			#region Nested type: AssertionCrawlerAnalysis

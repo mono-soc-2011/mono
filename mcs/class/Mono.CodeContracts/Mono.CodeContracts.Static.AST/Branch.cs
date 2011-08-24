@@ -31,15 +31,15 @@ namespace Mono.CodeContracts.Static.AST {
 		public readonly bool LeavesExceptionBlock;
 		public Expression Condition;
 		public Block Target;
-		private bool is_short_offset;
-		private bool unsigned;
+		public bool IsShortOffset;
+		public bool Unsigned;
 
 		public Branch (Expression condition, Block target, bool isShortOffset, bool unsigned, bool leavesExceptionBlock) : base (NodeType.Branch)
 		{
 			this.Condition = condition;
 			this.Target = target;
-			this.is_short_offset = isShortOffset;
-			this.unsigned = unsigned;
+			this.IsShortOffset = isShortOffset;
+			this.Unsigned = unsigned;
 			this.LeavesExceptionBlock = leavesExceptionBlock;
 		}
 

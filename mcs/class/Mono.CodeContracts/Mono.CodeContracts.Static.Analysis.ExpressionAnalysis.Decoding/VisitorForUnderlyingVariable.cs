@@ -39,7 +39,7 @@ namespace Mono.CodeContracts.Static.Analysis.ExpressionAnalysis.Decoding {
 		public static V IsUnderlyingVariable (E expr, FullExpressionDecoder<V, E> decoder)
 		{
 			VisitorForUnderlyingVariable<V, E> visitor = decoder.UnderlyingVariableVisitor;
-			bool res = Decode (expr, visitor, decoder);
+			Decode (expr, visitor, decoder);
 			return visitor.Variable;
 		}
 

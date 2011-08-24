@@ -29,6 +29,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Mono.CodeContracts.Static.AST;
 using Mono.CodeContracts.Static.AST.Visitors;
@@ -518,7 +519,7 @@ namespace Mono.CodeContracts.Static.Proving {
 		public class ConstantExpression : BoxedExpression {
 			public readonly TypeNode Type;
 			public readonly object Value;
-			private readonly bool isBoolean;
+			private readonly bool is_boolean;
 
 			public ConstantExpression (object value, TypeNode type)
 				: this (value, type, false)
@@ -529,7 +530,12 @@ namespace Mono.CodeContracts.Static.Proving {
 			{
 				this.Value = value;
 				this.Type = type;
-				this.isBoolean = isBoolean;
+				this.is_boolean = isBoolean;
+			}
+
+			public override bool IsBooleanTyped
+			{
+				get { return this.is_boolean; }
 			}
 
 			public override bool IsConstant
@@ -684,7 +690,7 @@ namespace Mono.CodeContracts.Static.Proving {
 				get
 				{
 					Tuple<bool, object, TypeNode> consta;
-					bool res = TryGetConstantFromCache (out consta);
+					TryGetConstantFromCache (out consta);
 
 					return consta.Item1;
 				}
@@ -695,7 +701,8 @@ namespace Mono.CodeContracts.Static.Proving {
 				get
 				{
 					Tuple<bool, object, TypeNode> consta;
-					bool res = TryGetConstantFromCache (out consta);
+					if (!TryGetConstantFromCache (out consta))
+						throw new InvalidOperationException ();
 
 					return consta.Item2;
 				}
@@ -706,7 +713,8 @@ namespace Mono.CodeContracts.Static.Proving {
 				get
 				{
 					Tuple<bool, object, TypeNode> consta;
-					bool res = TryGetConstantFromCache (out consta);
+					if (!TryGetConstantFromCache (out consta))
+						throw new InvalidOperationException();
 
 					return consta.Item3;
 				}
@@ -717,7 +725,7 @@ namespace Mono.CodeContracts.Static.Proving {
 				get
 				{
 					Tuple<bool, BoxedExpression, TypeNode> isinst;
-					bool res = TryGetIsInstFromCache (out isinst);
+					TryGetIsInstFromCache (out isinst);
 					return isinst.Item1;
 				}
 			}
@@ -732,7 +740,7 @@ namespace Mono.CodeContracts.Static.Proving {
 				get
 				{
 					Tuple<bool, UnaryOperator, BoxedExpression> unary;
-					bool res = TryGetUnaryFromCache (out unary);
+					TryGetUnaryFromCache (out unary);
 					return unary.Item1;
 				}
 			}
@@ -742,7 +750,8 @@ namespace Mono.CodeContracts.Static.Proving {
 				get
 				{
 					Tuple<bool, UnaryOperator, BoxedExpression> unary;
-					bool res = TryGetUnaryFromCache (out unary);
+					if (!TryGetUnaryFromCache (out unary))
+						throw new InvalidOperationException();
 					return unary.Item2;
 				}
 			}
@@ -752,7 +761,8 @@ namespace Mono.CodeContracts.Static.Proving {
 				get
 				{
 					Tuple<bool, UnaryOperator, BoxedExpression> unary;
-					bool res = TryGetUnaryFromCache (out unary);
+					if (!TryGetUnaryFromCache (out unary))
+						throw new InvalidOperationException ();
 					return unary.Item3;
 				}
 			}
@@ -771,7 +781,7 @@ namespace Mono.CodeContracts.Static.Proving {
 				get
 				{
 					Pair<bool, object> var1;
-					bool res = TryGetIsVariableFromCache (out var1);
+					TryGetIsVariableFromCache (out var1);
 					return var1.Key;
 				}
 			}

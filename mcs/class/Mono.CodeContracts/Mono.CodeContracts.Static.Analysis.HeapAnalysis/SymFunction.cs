@@ -33,12 +33,11 @@ using Mono.CodeContracts.Static.Providers;
 namespace Mono.CodeContracts.Static.Analysis.HeapAnalysis {
 	abstract class SymFunction : IConstantInfo, IEquatable<SymFunction>, IVisibilityCheck<Method> {
 		protected readonly IMetaDataProvider MetaDataProvider;
-		private readonly int id;
 
 		protected SymFunction (ref int idGen, IMetaDataProvider metaDataProvider)
 		{
 			this.MetaDataProvider = metaDataProvider;
-			this.id = idGen++;
+			idGen++;
 		}
 
 		public abstract bool ActsAsField { get; }

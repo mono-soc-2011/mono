@@ -40,7 +40,7 @@ namespace Mono.CodeContracts.Static.ControlFlow.Subroutines {
 		public readonly IContractProvider ContractProvider;
 		public readonly IMetaDataProvider MetaDataProvider;
 
-		private readonly EnsuresFactory ensures_factory;
+//		private readonly EnsuresFactory ensures_factory;
 		private readonly Dictionary<Method, ICFG> method_cache = new Dictionary<Method, ICFG> ();
 		private readonly RequiresFactory requires_factory;
 
@@ -50,7 +50,7 @@ namespace Mono.CodeContracts.Static.ControlFlow.Subroutines {
 			this.MetaDataProvider = metaDataProvider;
 			this.ContractProvider = contractProvider;
 			this.requires_factory = new RequiresFactory (this);
-			this.ensures_factory = new EnsuresFactory (this);
+//			this.ensures_factory = new EnsuresFactory (this);
 		}
 
 		#region IMethodCodeConsumer<Dummy,Subroutine> Members
@@ -86,8 +86,8 @@ namespace Mono.CodeContracts.Static.ControlFlow.Subroutines {
 			return null;
 			//todo: implement handling this in MethodSubroutine and uncomment lines below
 
-			//method = this.MetaDataProvider.Unspecialized (method);
-			//return this.ensures_factory.Get (method);
+//			method = this.MetaDataProvider.Unspecialized (method);
+//			return this.ensures_factory.Get (method);
 		}
 
 		public Subroutine GetInvariant (TypeNode type)

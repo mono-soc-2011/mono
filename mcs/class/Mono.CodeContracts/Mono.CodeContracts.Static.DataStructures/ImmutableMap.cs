@@ -101,8 +101,8 @@ namespace Mono.CodeContracts.Static.DataStructures {
 				return this;
 			LispList<K> newKeys = RemoveKey (key, this.keys);
 			if (newList == null)
-				return new ImmutableMap<K, V> (this.immutable_int_map.Remove (hashCode), this.count - 1, this.keys);
-			return new ImmutableMap<K, V> (this.immutable_int_map.Add (hashCode, newList), this.count - 1, this.keys);
+				return new ImmutableMap<K, V> (this.immutable_int_map.Remove (hashCode), this.count - 1, newKeys);
+			return new ImmutableMap<K, V> (this.immutable_int_map.Add (hashCode, newList), this.count - 1, newKeys);
 		}
 
 		public bool ContainsKey (K key)
@@ -139,5 +139,5 @@ namespace Mono.CodeContracts.Static.DataStructures {
 			return RemoveKey (key, keys.Tail).Cons (keys.Head);
 		}
 		#endregion
-		}
+	}
 }

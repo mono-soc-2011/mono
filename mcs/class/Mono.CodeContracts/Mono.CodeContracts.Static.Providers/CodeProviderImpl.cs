@@ -143,7 +143,6 @@ namespace Mono.CodeContracts.Static.Providers {
 			case NodeType.MethodContract:
 				return visitor.Nop (pc, data);
 			case NodeType.Requires:
-				var requires = (Requires) node;
 				return visitor.Assume (pc, EdgeTag.Requires, Dummy.Value, data);
 			case NodeType.Call:
 				var call = (MethodCall) node;

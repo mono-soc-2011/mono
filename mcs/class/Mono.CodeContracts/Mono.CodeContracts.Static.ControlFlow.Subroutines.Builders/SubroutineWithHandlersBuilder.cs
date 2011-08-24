@@ -49,7 +49,7 @@ namespace Mono.CodeContracts.Static.ControlFlow.Subroutines.Builders {
 			: base (codeProvider, subroutineFacade, entry)
 		{
 			this.method = method;
-			ComputeTryBlockStartAndEndInfo (method);
+			ComputeTryBlockStartAndEndInfo (this.method);
 			Initialize (entry);
 		}
 
